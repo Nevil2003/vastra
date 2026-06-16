@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/set-state-in-effect */
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Modal } from "@/components/ui/modal";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { getCategoryEmoji, hexToName } from "@/lib/utils";
 import { Camera, Plus, Search, Trash2, Sparkles } from "lucide-react";
 
-const categories = ["Shirt/Top", "T-Shirt", "Jeans", "Pants", "Skirt", "Dress", "Shoes", "Accessories", "Jacket", "Sweater", "Shorts"];
-const colors = ["#1a1410", "#FFFFFF", "#2563EB", "#DC2626", "#16A34A", "#EAB308", "#EC4899", "#8B5CF6", "#F97316", "#6B7280", "#78350F", "#0891B2"];
+const categories = ["Shirt/Top", "T-Shirt", "Kurta", "Saree", "Lehenga", "Jeans", "Pants", "Skirt", "Dress", "Shoes", "Accessories", "Jacket", "Sweater", "Shorts"];
+const colors = ["#171012", "#FFFFFF", "#7A2438", "#D69A2D", "#264D46", "#1E4F8A", "#C74328", "#7A5C9E", "#E7D9C8", "#6B7280", "#78350F", "#0891B2"];
 
 export default function ClosetPage() {
   const [items, setItems] = useState<any[]>([]);
@@ -134,7 +135,10 @@ export default function ClosetPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-3xl font-bold text-[#1A1410]">My Digital Closet</h1>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#7A2438]">Atelier</p>
+          <h1 className="font-serif text-4xl font-semibold text-[#171012]">Your closet</h1>
+        </div>
         <div className="flex gap-3">
           <label className="cursor-pointer">
             <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
@@ -161,6 +165,7 @@ export default function ClosetPage() {
           <option value="casual">Casual</option>
           <option value="formal">Formal</option>
           <option value="wedding">Wedding</option>
+          <option value="ethnic">Ethnic</option>
           <option value="summer">Summer</option>
           <option value="winter">Winter</option>
         </Select>
@@ -169,16 +174,16 @@ export default function ClosetPage() {
       {loading ? (
         <p className="text-center text-gray-500">Loading closet...</p>
       ) : filtered.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[#E8DDD5] bg-white p-12 text-center">
-          <Sparkles className="mx-auto h-10 w-10 text-[#D4A574]" />
-          <h3 className="mt-4 text-lg font-semibold text-[#1A1410]">Your closet is empty</h3>
-          <p className="text-gray-500">Upload a photo and let AI auto-tag your first item.</p>
+        <div className="rounded-lg border border-dashed border-[#E7D9C8] bg-[#FFFDF8] p-12 text-center">
+          <Sparkles className="mx-auto h-10 w-10 text-[#7A2438]" />
+          <h3 className="mt-4 font-serif text-2xl font-semibold text-[#171012]">Start with ten pieces</h3>
+          <p className="text-gray-500">Upload a few photos and Vastra will turn them into outfits.</p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {filtered.map((item) => (
             <Card key={item.id} className="group overflow-hidden">
-              <div className="flex h-48 items-center justify-center bg-[#F5F1ED] text-5xl">
+              <div className="flex h-48 items-center justify-center bg-[#F7F0E4] text-xl font-bold tracking-wide text-[#7A2438]">
                 {item.imageUrl ? (
                   <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
                 ) : (
@@ -186,9 +191,9 @@ export default function ClosetPage() {
                 )}
               </div>
               <CardContent className="space-y-2">
-                <div className="text-xs font-bold uppercase tracking-wider text-[#C1440E]">{item.category}</div>
-                <div className="font-semibold text-[#1A1410]">{item.name}</div>
-                <div className="text-sm text-gray-500">{item.brand} {item.size && `• Size ${item.size}`}</div>
+                <div className="text-xs font-bold uppercase tracking-wider text-[#7A2438]">{item.category}</div>
+                <div className="font-serif text-lg font-semibold text-[#171012]">{item.name}</div>
+                <div className="text-sm text-gray-500">{item.brand} {item.size && `- Size ${item.size}`}</div>
                 <div className="flex items-center gap-2">
                   <div className="h-5 w-5 rounded-full border border-gray-200" style={{ background: item.color }} />
                   <span className="text-xs text-gray-500">{item.colorName || hexToName(item.color)}</span>
@@ -240,7 +245,7 @@ export default function ClosetPage() {
               <Input value={form.size} onChange={(e) => setForm({ ...form, size: e.target.value })} />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-semibold">Value (₹)</label>
+              <label className="mb-1 block text-sm font-semibold">Value (INR)</label>
               <Input type="number" value={form.estimatedValue} onChange={(e) => setForm({ ...form, estimatedValue: e.target.value })} />
             </div>
           </div>

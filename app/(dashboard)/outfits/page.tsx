@@ -1,8 +1,9 @@
 "use client";
 
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/set-state-in-effect */
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { getCategoryEmoji } from "@/lib/utils";
 import { Trash2, Sparkles, Shirt } from "lucide-react";
 import Link from "next/link";

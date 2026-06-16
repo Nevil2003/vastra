@@ -1,11 +1,12 @@
 "use client";
 
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/set-state-in-effect */
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { Heart, Trash2 } from "lucide-react";
+import { Heart } from "lucide-react";
 
 const defaultBrands = ["H&M", "Zara", "Uniqlo", "Forever 21", "Mango", "Levis", "Nike", "Adidas"];
 

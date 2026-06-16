@@ -1,8 +1,9 @@
 "use client";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Check, Crown, Sparkles, ShieldCheck, TrendingUp } from "lucide-react";
 
 const features = [
@@ -46,8 +47,8 @@ export default function ProPage() {
       <Card className="overflow-hidden border-[#D4A574]">
         <div className="bg-[#1A1410] p-6 text-center text-white">
           <Crown className="mx-auto h-10 w-10 text-[#D4A574]" />
-          <div className="mt-4 text-4xl font-bold">₹99<span className="text-lg font-normal text-white/70">/month</span></div>
-          <div className="text-sm text-white/60">or ₹899/year (25% off)</div>
+          <div className="mt-4 text-4xl font-bold">INR 99<span className="text-lg font-normal text-white/70">/month</span></div>
+          <div className="text-sm text-white/60">or INR 899/year (25% off)</div>
         </div>
         <CardContent className="space-y-4">
           <ul className="space-y-3">
@@ -59,7 +60,7 @@ export default function ProPage() {
           </ul>
           {isPro ? (
             <div className="rounded-lg bg-green-50 p-4 text-center font-semibold text-green-700">
-              You are on Vastra Pro 🎉
+              You are on Vastra Pro
             </div>
           ) : (
             <Button onClick={checkout} isLoading={loading} className="w-full gap-2">
