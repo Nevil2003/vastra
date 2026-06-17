@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/use-user";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Shirt, Palette, Ruler, Heart, Crown, LogOut, Menu, X } from "lucide-react";
+import { BarChart3, Sparkles, Shirt, Palette, Ruler, Heart, Crown, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const links = [
   { href: "/closet", label: "Closet", icon: Shirt },
   { href: "/builder", label: "Builder", icon: Palette },
   { href: "/outfits", label: "Outfits", icon: Sparkles },
+  { href: "/insights", label: "Insights", icon: BarChart3 },
   { href: "/sizes", label: "Sizes", icon: Ruler },
   { href: "/brands", label: "Brands", icon: Heart },
   { href: "/pro", label: "Pro", icon: Crown },

@@ -1,12 +1,14 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { getCategoryEmoji } from "@/lib/utils";
-import { RotateCcw, Save, Sparkles } from "lucide-react";
+import { RotateCcw, Save, Shuffle, Sparkles } from "lucide-react";
 
 const slots = ["top", "bottom", "shoes", "accessory"];
 const slotEmoji: Record<string, string> = { top: "👔", bottom: "👖", shoes: "👟", accessory: "👜" };
@@ -32,10 +34,17 @@ export default function BuilderPage() {
   const [weather, setWeather] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  async function loadItems() {
+    const res = await fetch("/api/closet");
+    const data = await res.json();
+    setItems(data.items || []);
+  }
+
   useEffect(() => {
-    fetch("/api/closet").then((res) => res.json()).then((data) => setItems(data.items || []));
+    loadItems();
   }, []);
 
   function itemsForSlot(slot: string) {
@@ -43,6 +52,31 @@ export default function BuilderPage() {
     if (slot === "bottom") return items.filter((item) => ["Jeans", "Pants", "Skirt", "Shorts", "Dress", "Saree", "Lehenga"].includes(item.category));
     if (slot === "shoes") return items.filter((item) => item.category === "Shoes");
     return items.filter((item) => item.category === "Accessories");
+  }
+
+  function pickOne(slot: string) {
+    const candidates = itemsForSlot(slot);
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+
+  function shuffleLook() {
+    const next: Record<string, ClosetItem | undefined> = {};
+    for (const slot of slots) next[slot] = pickOne(slot);
+    setOutfit(next);
+    setName("Quick studio look");
+  }
+
+  async function loadSampleWardrobe() {
+    setSeeding(true);
+    const res = await fetch("/api/closet/sample", { method: "POST" });
+    setSeeding(false);
+    if (res.ok) {
+      const data = await res.json();
+      setItems(data.items || []);
+    } else {
+      const data = await res.json();
+      alert(data.error || "Failed to load sample wardrobe");
+    }
   }
 
   async function getRecommendations() {
@@ -96,7 +130,19 @@ export default function BuilderPage() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <CardTitle>Your outfit</CardTitle>
+          <CardTitle className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <span>Your outfit</span>
+            <span className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={shuffleLook} disabled={items.length < 2} className="gap-2">
+                <Shuffle className="h-4 w-4" /> Shuffle
+              </Button>
+              {items.length < 2 && (
+                <Button size="sm" onClick={loadSampleWardrobe} isLoading={seeding}>
+                  Load sample
+                </Button>
+              )}
+            </span>
+          </CardTitle>
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               {slots.map((slot) => (

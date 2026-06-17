@@ -20,6 +20,7 @@ export default function ClosetPage() {
   const [filter, setFilter] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -111,6 +112,20 @@ export default function ClosetPage() {
     loadItems();
   }
 
+  async function loadSampleWardrobe() {
+    setSeeding(true);
+    const res = await fetch("/api/closet/sample", { method: "POST" });
+    setSeeding(false);
+    if (res.ok) {
+      const data = await res.json();
+      setItems(data.items || []);
+      setLoading(false);
+    } else {
+      const data = await res.json();
+      alert(data.error || "Failed to load sample wardrobe");
+    }
+  }
+
   function resetForm() {
     setForm({
       name: "",
@@ -148,6 +163,9 @@ export default function ClosetPage() {
           </label>
           <Button onClick={() => { resetForm(); setModalOpen(true); }} className="gap-2">
             <Plus className="h-4 w-4" /> Add Item
+          </Button>
+          <Button variant="outline" onClick={loadSampleWardrobe} isLoading={seeding}>
+            Sample
           </Button>
         </div>
       </div>
@@ -206,6 +224,9 @@ export default function ClosetPage() {
               </label>
               <Button onClick={() => { resetForm(); setModalOpen(true); }} className="gap-2">
                 <Plus className="h-4 w-4" /> Add manually
+              </Button>
+              <Button variant="outline" onClick={loadSampleWardrobe} isLoading={seeding}>
+                Load sample wardrobe
               </Button>
             </div>
           )}

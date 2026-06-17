@@ -33,28 +33,32 @@ export default function OutfitsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-[#1A1410]">Saved Outfits</h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#7A2438]">Lookbook</p>
+          <h1 className="font-serif text-4xl font-semibold text-[#171012]">Saved looks</h1>
+          <p className="mt-2 text-[#5D5050]">Your repeatable outfits, ready for re-wear and fit checks.</p>
+        </div>
         <Link href="/builder">
-          <Button className="gap-2"><Shirt className="h-4 w-4" /> Build New</Button>
+          <Button className="gap-2"><Shirt className="h-4 w-4" /> Build look</Button>
         </Link>
       </div>
 
       {outfits.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[#E8DDD5] bg-white p-12 text-center">
-          <Sparkles className="mx-auto h-10 w-10 text-[#D4A574]" />
-          <h3 className="mt-4 text-lg font-semibold text-[#1A1410]">No outfits yet</h3>
-          <p className="text-gray-500">Build your first AI-powered outfit.</p>
+        <div className="rounded-2xl border border-dashed border-[#D9C3A8] bg-[#FFFDF8] p-12 text-center">
+          <Sparkles className="mx-auto h-10 w-10 text-[#7A2438]" />
+          <h3 className="mt-4 font-serif text-2xl font-semibold text-[#171012]">No looks yet</h3>
+          <p className="text-[#8C7F70]">Build a Studio look and save it here.</p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {outfits.map((outfit) => (
-            <Card key={outfit.id}>
+            <Card key={outfit.id} hover>
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-semibold text-[#1A1410]">{outfit.name}</div>
-                    {outfit.occasion && <div className="text-xs uppercase text-[#C1440E]">{outfit.occasion}</div>}
+                    <div className="font-serif text-xl font-semibold text-[#171012]">{outfit.name}</div>
+                    {outfit.occasion && <div className="text-xs uppercase tracking-[0.18em] text-[#7A2438]">{outfit.occasion}</div>}
                   </div>
                   <Button variant="danger" size="sm" onClick={() => deleteOutfit(outfit.id)}>
                     <Trash2 className="h-4 w-4" />
@@ -62,10 +66,10 @@ export default function OutfitsPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   {outfit.items.map((slotItem: any) => (
-                    <div key={slotItem.id} className="rounded-md bg-[#F5F1ED] p-2 text-center text-sm">
-                      <div className="text-xl">{getCategoryEmoji(slotItem.item.category)}</div>
-                      <div className="truncate font-medium text-[#1A1410]">{slotItem.item.name}</div>
-                      <div className="text-xs text-gray-500">{slotItem.slot}</div>
+                    <div key={slotItem.id} className="rounded-xl bg-[#F7F0E4] p-3 text-center text-sm">
+                      <div className="text-2xl">{getCategoryEmoji(slotItem.item.category)}</div>
+                      <div className="truncate font-medium text-[#171012]">{slotItem.item.name}</div>
+                      <div className="text-xs uppercase tracking-wide text-[#8C7F70]">{slotItem.slot}</div>
                     </div>
                   ))}
                 </div>
