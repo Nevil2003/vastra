@@ -2,6 +2,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+const nousApiKey = process.env.NOUS_API_KEY;
+const nousBaseUrl = process.env.NOUS_BASE_URL || "https://inference-api.nousresearch.com/v1";
+const nousModel = process.env.NOUS_MODEL || "Hermes-4-70B";
 
 export type ClothingAnalysis = {
   name: string;
@@ -72,16 +75,46 @@ export type OutfitRecommendation = {
   items: { slot: string; itemId: string; name: string }[];
 };
 
+async function generateNousJson<T>(prompt: string): Promise<T | null> {
+  if (!nousApiKey) return null;
+
+  const res = await fetch(`${nousBaseUrl}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${nousApiKey}`,
+    },
+    body: JSON.stringify({
+      model: nousModel,
+      messages: [
+        {
+          role: "system",
+          content: "You are a concise Indian fashion stylist. Reply with only valid JSON.",
+        },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.4,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`NOUS_API_KEY request failed (${res.status})`);
+  }
+
+  const data = await res.json();
+  const text = data.choices?.[0]?.message?.content || "";
+  const cleaned = text.replace(/```json/g, "").replace(/```/g, "").trim();
+  return JSON.parse(cleaned) as T;
+}
+
 export async function generateOutfitRecommendations(
   items: { id: string; name: string; category: string; color: string; colorName: string | null; occasion?: string | null; season?: string | null }[],
   occasion?: string,
   weather?: string
 ): Promise<OutfitRecommendation[]> {
-  if (!genAI || items.length < 2) {
+  if (items.length < 2) {
     return [];
   }
-
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   const prompt = `Given these wardrobe items, suggest 3 complete outfits${occasion ? ` for a ${occasion} occasion` : ""}${weather ? ` in ${weather} weather` : ""}.
 
@@ -102,6 +135,19 @@ Return ONLY a valid JSON array with this shape (no markdown):
     ]
   }
 ]`;
+
+  if (nousApiKey) {
+    try {
+      const parsed = await generateNousJson<OutfitRecommendation[]>(prompt);
+      return Array.isArray(parsed) ? parsed.slice(0, 3) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  if (!genAI) return [];
+
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   try {
     const result = await model.generateContent(prompt);
