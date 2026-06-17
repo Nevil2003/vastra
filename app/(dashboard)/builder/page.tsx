@@ -9,6 +9,7 @@ import { getCategoryEmoji } from "@/lib/utils";
 import { RotateCcw, Save, Sparkles } from "lucide-react";
 
 const slots = ["top", "bottom", "shoes", "accessory"];
+const slotEmoji: Record<string, string> = { top: "👔", bottom: "👖", shoes: "👟", accessory: "👜" };
 
 type ClosetItem = {
   id: string;
@@ -99,16 +100,20 @@ export default function BuilderPage() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               {slots.map((slot) => (
-                <div key={slot} className="rounded-lg border border-dashed border-[#D69A2D] bg-[#F7F0E4] p-4 text-center">
-                  <div className="mb-2 text-xs font-bold uppercase tracking-wider text-[#7A2438]">{slot}</div>
+                <div key={slot} className="rounded-2xl border border-dashed border-[#D9C3A8] bg-[#FBF5EB] p-4 text-center transition hover:border-[#D69A2D]">
+                  <div className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-[#7A2438]">{slot}</div>
                   {outfit[slot] ? (
-                    <div className="space-y-2">
-                      <div className="text-xl font-bold text-[#7A2438]">{getCategoryEmoji(outfit[slot].category)}</div>
-                      <div className="font-serif text-lg font-semibold text-[#171012]">{outfit[slot].name}</div>
-                      <div className="text-xs text-gray-500">{outfit[slot].brand}</div>
+                    <div className="space-y-1.5">
+                      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#FFFDF8] text-3xl shadow-sm">
+                        {getCategoryEmoji(outfit[slot].category)}
+                      </div>
+                      <div className="font-serif text-base font-semibold leading-tight text-[#171012]">{outfit[slot].name}</div>
+                      <div className="text-xs text-[#8C7F70]">{outfit[slot].brand || "\u00A0"}</div>
                     </div>
                   ) : (
-                    <div className="text-xl font-bold tracking-wide text-gray-300">{slot.slice(0, 2).toUpperCase()}</div>
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-dashed border-[#E7D9C8] text-2xl opacity-40">
+                      {slotEmoji[slot]}
+                    </div>
                   )}
                   <Select
                     value={outfit[slot]?.id || ""}
@@ -180,7 +185,7 @@ export default function BuilderPage() {
                       <span className="font-semibold text-[#171012]">Look {idx + 1}</span>
                       <span className="text-xs font-bold text-[#7A2438]">{rec.matchScore || "85"}% match</span>
                     </div>
-                    <p className="mt-1 text-sm text-gray-600">{rec.reason}</p>
+                    <p className="mt-1 text-sm text-[#5D5050]">{rec.reason}</p>
                   </div>
                 ))}
               </CardContent>

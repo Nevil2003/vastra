@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Modal } from "@/components/ui/modal";
-import { Card, CardContent } from "@/components/ui/card";
-import { getCategoryEmoji, hexToName } from "@/lib/utils";
-import { Camera, Plus, Search, Trash2, Sparkles } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { getCategoryEmoji, hexToName, tileGradient } from "@/lib/utils";
+import { Camera, Plus, Search, Trash2 } from "lucide-react";
 
 const categories = ["Shirt/Top", "T-Shirt", "Kurta", "Saree", "Lehenga", "Jeans", "Pants", "Skirt", "Dress", "Shoes", "Accessories", "Jacket", "Sweater", "Shorts"];
 const colors = ["#171012", "#FFFFFF", "#7A2438", "#D69A2D", "#264D46", "#1E4F8A", "#C74328", "#7A5C9E", "#E7D9C8", "#6B7280", "#78350F", "#0891B2"];
@@ -154,7 +154,7 @@ export default function ClosetPage() {
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A89B8C]" />
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search items, brands..." className="pl-10" />
         </div>
         <Select value={filter} onChange={(e) => setFilter(e.target.value)} className="sm:w-48">
@@ -172,36 +172,85 @@ export default function ClosetPage() {
       </div>
 
       {loading ? (
-        <p className="text-center text-gray-500">Loading closet...</p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="overflow-hidden rounded-2xl border border-[#E7D9C8] bg-[#FFFDF8]">
+              <div className="h-48 animate-pulse bg-[#F1E7D8]" />
+              <div className="space-y-2 p-4">
+                <div className="h-4 w-2/3 animate-pulse rounded bg-[#F1E7D8]" />
+                <div className="h-3 w-1/2 animate-pulse rounded bg-[#F1E7D8]" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-[#E7D9C8] bg-[#FFFDF8] p-12 text-center">
-          <Sparkles className="mx-auto h-10 w-10 text-[#7A2438]" />
-          <h3 className="mt-4 font-serif text-2xl font-semibold text-[#171012]">Start with ten pieces</h3>
-          <p className="text-gray-500">Upload a few photos and Vastra will turn them into outfits.</p>
+        <div className="rounded-2xl border border-dashed border-[#D9C3A8] bg-[#FFFDF8] p-12 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#F7F0E4] text-3xl">
+            👗
+          </div>
+          <h3 className="mt-5 font-serif text-2xl font-semibold text-[#171012]">
+            {search || filter ? "Nothing matches that" : "Your closet is empty"}
+          </h3>
+          <p className="mx-auto mt-2 max-w-sm text-[#8C7F70]">
+            {search || filter
+              ? "Try a different search or clear the filter."
+              : "Snap a photo and let AI tag it, or add a piece by hand. Ten items is enough for Vastra to start styling."}
+          </p>
+          {!search && !filter && (
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <label className="cursor-pointer">
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                <Button asSpan variant="secondary" className="gap-2" isLoading={analyzing}>
+                  <Camera className="h-4 w-4" /> Scan a piece
+                </Button>
+              </label>
+              <Button onClick={() => { resetForm(); setModalOpen(true); }} className="gap-2">
+                <Plus className="h-4 w-4" /> Add manually
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {filtered.map((item) => (
-            <Card key={item.id} className="group overflow-hidden">
-              <div className="flex h-48 items-center justify-center bg-[#F7F0E4] text-xl font-bold tracking-wide text-[#7A2438]">
+            <Card key={item.id} hover className="group overflow-hidden p-0">
+              <div
+                className="relative flex h-48 items-center justify-center overflow-hidden"
+                style={item.imageUrl ? undefined : { background: tileGradient(item.color) }}
+              >
                 {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
+                  <img
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
                 ) : (
-                  getCategoryEmoji(item.category)
+                  <span className="text-6xl drop-shadow-sm transition duration-500 group-hover:scale-110">
+                    {getCategoryEmoji(item.category)}
+                  </span>
                 )}
+                <span className="absolute left-3 top-3 rounded-full bg-[#FFFDF8]/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#7A2438] shadow-sm backdrop-blur">
+                  {item.category}
+                </span>
+                <button
+                  onClick={() => deleteItem(item.id)}
+                  aria-label="Remove item"
+                  className="absolute right-3 top-3 rounded-full bg-[#171012]/55 p-2 text-white opacity-0 backdrop-blur transition hover:bg-[#B3261E] focus-visible:opacity-100 group-hover:opacity-100"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
-              <CardContent className="space-y-2">
-                <div className="text-xs font-bold uppercase tracking-wider text-[#7A2438]">{item.category}</div>
+              <div className="space-y-2 p-4">
                 <div className="font-serif text-lg font-semibold text-[#171012]">{item.name}</div>
-                <div className="text-sm text-gray-500">{item.brand} {item.size && `- Size ${item.size}`}</div>
-                <div className="flex items-center gap-2">
-                  <div className="h-5 w-5 rounded-full border border-gray-200" style={{ background: item.color }} />
-                  <span className="text-xs text-gray-500">{item.colorName || hexToName(item.color)}</span>
+                <div className="text-sm text-[#8C7F70]">
+                  {item.brand || "-"}
+                  {item.size && ` · Size ${item.size}`}
                 </div>
-                <Button variant="danger" size="sm" className="w-full gap-2 opacity-0 transition group-hover:opacity-100" onClick={() => deleteItem(item.id)}>
-                  <Trash2 className="h-4 w-4" /> Remove
-                </Button>
-              </CardContent>
+                <div className="flex items-center gap-2 pt-1">
+                  <div className="h-4 w-4 rounded-full border border-[#E7D9C8]" style={{ background: item.color }} />
+                  <span className="text-xs text-[#8C7F70]">{item.colorName || hexToName(item.color)}</span>
+                </div>
+              </div>
             </Card>
           ))}
         </div>
@@ -233,7 +282,7 @@ export default function ClosetPage() {
                   key={c}
                   type="button"
                   onClick={() => setForm({ ...form, color: c })}
-                  className={`h-8 w-8 rounded-full border-2 ${form.color === c ? "border-[#C1440E]" : "border-transparent"}`}
+                  className={`h-8 w-8 rounded-full border-2 ${form.color === c ? "border-[#7A2438] ring-2 ring-[#7A2438]/25 ring-offset-1 ring-offset-[#FFFDF8]" : "border-transparent hover:scale-110"} transition`}
                   style={{ background: c, boxShadow: c === "#FFFFFF" ? "inset 0 0 0 1px #ddd" : undefined }}
                 />
               ))}

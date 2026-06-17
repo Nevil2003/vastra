@@ -116,7 +116,7 @@ export default function DashboardPage() {
                     if (!item) return null;
                     return (
                       <div key={slotItem.slot} className="flex items-center gap-3 rounded-lg border border-[#E7D9C8] bg-[#F7F0E4] p-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FFFDF8] text-sm font-bold text-[#7A2438] shadow-sm">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FFFDF8] text-2xl shadow-sm">
                           {getCategoryEmoji(item.category)}
                         </div>
                         <div>

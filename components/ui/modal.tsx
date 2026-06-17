@@ -15,27 +15,36 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
     }
-    if (open) window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    if (open) {
+      window.addEventListener("keydown", onKey);
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
   }, [open, onClose]);
 
   if (!open) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[#171012]/55 p-0 backdrop-blur-sm motion-safe:animate-[fadeIn_0.18s_ease-out] sm:items-center sm:p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-        >
-          <X className="h-5 w-5" />
-        </button>
-        <h2 className="mb-4 text-xl font-bold text-[#1A1410]">{title}</h2>
+      <div className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-[#E7D9C8] bg-[#FFFDF8] p-6 shadow-2xl shadow-[#171012]/25 motion-safe:animate-[scaleIn_0.2s_ease-out] sm:rounded-2xl">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <h2 className="font-serif text-2xl font-semibold text-[#171012]">{title}</h2>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded-full p-1.5 text-[#8C7F70] transition hover:bg-[#E7D9C8] hover:text-[#241A1C]"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
         {children}
       </div>
     </div>
