@@ -9,12 +9,11 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
-import { Select } from "@/components/ui/select";
 import { ImageSelection, SearchOverlay } from "@/components/wardrobe/search-overlay";
 import { createItem } from "@/lib/firestore";
 import { uploadUserImage } from "@/lib/storage";
 import { cn } from "@/lib/utils";
-import { Garment, GarmentCategory, StitchingStatus } from "@/types";
+import { GarmentCategory, WishlistItem } from "@/types";
 
 const CATEGORIES: { name: GarmentCategory; icon: ElementType }[] = [
   { name: "Top",       icon: Shirt },
@@ -31,13 +30,15 @@ const CATEGORIES: { name: GarmentCategory; icon: ElementType }[] = [
   { name: "Beauty",    icon: Palette },
 ];
 
-const stitchingStatuses: StitchingStatus[] = [
-  "not-needed", "to-stitch", "with-tailor", "trial", "ready", "delivered",
+const PRIORITIES: { value: WishlistItem["priority"]; label: string; color: string }[] = [
+  { value: "low",    label: "Low",    color: "text-[#888888]" },
+  { value: "medium", label: "Medium", color: "text-[#F59E0B]" },
+  { value: "high",   label: "High",   color: "text-[#EF4444]" },
 ];
 
 type ImageMode = "photo" | "search" | "url";
 
-export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function AddWishlistModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -45,7 +46,6 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [overlayMode, setOverlayMode] = useState<"search" | "url">("search");
 
-  // Image state
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [externalImageUrl, setExternalImageUrl] = useState<string | null>(null);
@@ -53,15 +53,10 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
   const [form, setForm] = useState({
     name: "",
     category: "Top" as GarmentCategory,
-    color: "#111111",
-    colorName: "",
-    brand: "",
-    size: "",
-    fabric: "",
-    occasion: "",
+    priority: "medium" as WishlistItem["priority"],
     price: "",
+    url: "",
     notes: "",
-    stitchingStatus: "not-needed" as StitchingStatus,
   });
 
   function setField(name: string, value: string) {
@@ -85,8 +80,8 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
     setForm((c) => ({
       ...c,
       name:  c.name  || sel.name  || "",
-      brand: c.brand || sel.brand || "",
       price: c.price || sel.price || "",
+      url:   c.url   || sel.sourceUrl || "",
     }));
     setOverlayOpen(false);
   }
@@ -102,11 +97,7 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
     setImageMode("photo");
     setOverlayOpen(false);
     setError("");
-    setForm({
-      name: "", category: "Top", color: "#111111", colorName: "",
-      brand: "", size: "", fabric: "", occasion: "", price: "", notes: "",
-      stitchingStatus: "not-needed",
-    });
+    setForm({ name: "", category: "Top", priority: "medium", price: "", url: "", notes: "" });
   }
 
   async function submit(e: FormEvent) {
@@ -118,28 +109,21 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
     try {
       let imageUrl: string | undefined;
       if (imageMode === "photo" && file) {
-        imageUrl = await uploadUserImage(user.uid, "garments", file);
-      } else if ((imageMode === "search" || imageMode === "url") && externalImageUrl) {
+        imageUrl = await uploadUserImage(user.uid, "wishlist", file);
+      } else if (externalImageUrl) {
         imageUrl = externalImageUrl;
       }
 
-      await createItem<Omit<Garment, "id" | "createdAt" | "updatedAt">>("garments", {
+      await createItem<Omit<WishlistItem, "id" | "createdAt" | "updatedAt">>("wishlist", {
         userId: user.uid,
         name: form.name.trim(),
         category: form.category,
-        color: form.color,
-        colorName: form.colorName || form.color,
         imageUrl,
-        brand: form.brand || undefined,
-        size: form.size || undefined,
-        fabric: form.fabric || undefined,
-        occasion: form.occasion || undefined,
-        season: "all-season",
+        url: form.url || undefined,
         price: form.price ? Number(form.price) : undefined,
-        wearCount: 0,
+        priority: form.priority,
         notes: form.notes || undefined,
-        stitchingStatus: form.stitchingStatus,
-        measurements: {},
+        purchased: false,
       });
       onClose();
       reset();
@@ -152,7 +136,7 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
 
   return (
     <>
-      <Modal open={open} onClose={() => { onClose(); reset(); }} title="Add to closet">
+      <Modal open={open} onClose={() => { onClose(); reset(); }} title="Add to wishlist">
         <form onSubmit={submit} className="space-y-5">
 
           {/* Name */}
@@ -162,7 +146,7 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
             onChange={(e) => { setField("name", e.target.value); setError(""); }}
           />
 
-          {/* Category picker */}
+          {/* Category */}
           <div>
             <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-[#888888]">Category</p>
             <div className="grid grid-cols-4 gap-2">
@@ -189,11 +173,34 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
             </div>
           </div>
 
+          {/* Priority */}
+          <div>
+            <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-[#888888]">Priority</p>
+            <div className="flex gap-2">
+              {PRIORITIES.map(({ value, label, color }) => {
+                const active = form.priority === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setField("priority", value)}
+                    className={cn(
+                      "flex-1 rounded-xl py-3 text-sm font-semibold transition-all duration-200",
+                      active
+                        ? "bg-[#111111] text-white scale-[1.03] shadow-sm"
+                        : `border border-[#E8E8E8] bg-white ${color} hover:border-[#AAAAAA] hover:scale-[1.02]`
+                    )}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Image source */}
           <div>
             <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-[#888888]">Photo</p>
-
-            {/* Tabs */}
             <div className="flex rounded-xl border border-[#E8E8E8] bg-[#F8F8F8] p-1 gap-1">
               {([
                 { key: "photo" as ImageMode, icon: Camera, label: "Upload" },
@@ -218,7 +225,7 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
             </div>
 
             <div className="mt-3">
-              {/* Photo tab */}
+              {/* Photo */}
               {imageMode === "photo" && (
                 <div className="animate-rise">
                   {filePreview ? (
@@ -239,7 +246,7 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
                 </div>
               )}
 
-              {/* Search tab */}
+              {/* Search */}
               {imageMode === "search" && (
                 <div className="animate-rise">
                   {externalImageUrl ? (
@@ -251,11 +258,8 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
                       </button>
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => openOverlay("search")}
-                      className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-[#E8E8E8] px-5 py-8 text-sm text-[#AAAAAA] transition-colors hover:border-[#CCCCCC] hover:text-[#888888]"
-                    >
+                    <button type="button" onClick={() => openOverlay("search")}
+                      className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-[#E8E8E8] px-5 py-8 text-sm text-[#AAAAAA] transition-colors hover:border-[#CCCCCC] hover:text-[#888888]">
                       <Search className="h-5 w-5" />
                       <span>Search for an image…</span>
                     </button>
@@ -263,7 +267,7 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
                 </div>
               )}
 
-              {/* URL tab */}
+              {/* URL */}
               {imageMode === "url" && (
                 <div className="animate-rise">
                   {externalImageUrl ? (
@@ -275,13 +279,10 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
                       </button>
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => openOverlay("url")}
-                      className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-[#E8E8E8] px-5 py-8 text-sm text-[#AAAAAA] transition-colors hover:border-[#CCCCCC] hover:text-[#888888]"
-                    >
+                    <button type="button" onClick={() => openOverlay("url")}
+                      className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-[#E8E8E8] px-5 py-8 text-sm text-[#AAAAAA] transition-colors hover:border-[#CCCCCC] hover:text-[#888888]">
                       <Link2 className="h-5 w-5" />
-                      <span>Paste an image URL…</span>
+                      <span>Paste a product page URL…</span>
                     </button>
                   )}
                 </div>
@@ -291,40 +292,20 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
 
           {/* Details */}
           <div className="grid gap-3 sm:grid-cols-2">
-            <Input placeholder="Color name (e.g. Navy)" value={form.colorName} onChange={(e) => setField("colorName", e.target.value)} />
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={form.color}
-                onChange={(e) => setField("color", e.target.value)}
-                className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-[#E8E8E8] p-1"
-              />
-              <span className="text-xs text-[#888888]">Colour swatch</span>
-            </div>
-            <Input placeholder="Brand" value={form.brand} onChange={(e) => setField("brand", e.target.value)} />
-            <Input placeholder="Size" value={form.size} onChange={(e) => setField("size", e.target.value)} />
-            <Input placeholder="Fabric" value={form.fabric} onChange={(e) => setField("fabric", e.target.value)} />
-            <Input placeholder="Occasion" value={form.occasion} onChange={(e) => setField("occasion", e.target.value)} />
             <Input type="number" min="0" placeholder="Price" value={form.price} onChange={(e) => setField("price", e.target.value)} />
-            <Select value={form.stitchingStatus} onChange={(e) => setField("stitchingStatus", e.target.value)}>
-              {stitchingStatuses.map((s) => (
-                <option key={s} value={s}>{s.replace(/-/g, " ")}</option>
-              ))}
-            </Select>
+            <Input placeholder="Product URL (shop link)" value={form.url} onChange={(e) => setField("url", e.target.value)} />
           </div>
-
           <Input placeholder="Notes" value={form.notes} onChange={(e) => setField("notes", e.target.value)} />
 
           {error && (
             <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</p>
           )}
           <Button type="submit" className="w-full" isLoading={loading}>
-            Add to closet
+            Save to wishlist
           </Button>
         </form>
       </Modal>
 
-      {/* Full-screen search / URL overlay */}
       <SearchOverlay
         open={overlayOpen}
         mode={overlayMode}

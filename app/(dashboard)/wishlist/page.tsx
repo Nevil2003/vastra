@@ -1,51 +1,17 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useState } from "react";
 import { Check, ExternalLink, Heart, Plus } from "lucide-react";
-import Image from "next/image";
-import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Modal } from "@/components/ui/modal";
-import { Select } from "@/components/ui/select";
-import { createItem, updateItem } from "@/lib/firestore";
+import { AddWishlistModal } from "@/components/wardrobe/add-wishlist-modal";
+import { updateItem } from "@/lib/firestore";
 import { useUserCollection } from "@/lib/hooks/use-user-collection";
-import { uploadUserImage } from "@/lib/storage";
 import { formatCurrency } from "@/lib/utils";
-import { GarmentCategory, WishlistItem } from "@/types";
-
-const categories: GarmentCategory[] = ["Top", "Bottom", "Dress", "Saree", "Kurta", "Lehenga", "Suit", "Outerwear", "Shoes", "Accessory", "Fabric", "Beauty"];
+import { WishlistItem } from "@/types";
 
 export default function WishlistPage() {
-  const { user } = useAuth();
   const { items } = useUserCollection<WishlistItem>("wishlist");
   const [open, setOpen] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [form, setForm] = useState({ name: "", category: "Top" as GarmentCategory, url: "", price: "", priority: "medium", notes: "" });
-
-  function setField(name: string, value: string) {
-    setForm((c) => ({ ...c, [name]: value }));
-  }
-
-  async function submit(e: FormEvent) {
-    e.preventDefault();
-    if (!user) return;
-    const imageUrl = file ? await uploadUserImage(user.uid, "wishlist", file) : undefined;
-    await createItem<Omit<WishlistItem, "id" | "createdAt" | "updatedAt">>("wishlist", {
-      userId: user.uid,
-      name: form.name,
-      category: form.category,
-      url: form.url,
-      imageUrl,
-      price: form.price ? Number(form.price) : undefined,
-      priority: form.priority as WishlistItem["priority"],
-      notes: form.notes,
-      purchased: false,
-    });
-    setOpen(false);
-    setFile(null);
-    setForm({ name: "", category: "Top", url: "", price: "", priority: "medium", notes: "" });
-  }
 
   const active = items.filter((i) => !i.purchased);
   const purchased = items.filter((i) => i.purchased);
@@ -71,12 +37,11 @@ export default function WishlistPage() {
             <div key={item.id} className="group">
               <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-[#F5F5F5]">
                 {item.imageUrl ? (
-                  <Image
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
                     src={item.imageUrl}
                     alt={item.name}
-                    fill
-                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center">
@@ -148,27 +113,7 @@ export default function WishlistPage() {
         </div>
       )}
 
-      {/* Add modal */}
-      <Modal open={open} onClose={() => setOpen(false)} title="Add to wishlist">
-        <form onSubmit={submit} className="space-y-3">
-          <Input required placeholder="Item name" value={form.name} onChange={(e) => setField("name", e.target.value)} />
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Select value={form.category} onChange={(e) => setField("category", e.target.value)}>
-              {categories.map((cat) => <option key={cat}>{cat}</option>)}
-            </Select>
-            <Select value={form.priority} onChange={(e) => setField("priority", e.target.value)}>
-              <option value="low">Low priority</option>
-              <option value="medium">Medium priority</option>
-              <option value="high">High priority</option>
-            </Select>
-          </div>
-          <Input placeholder="Product URL" value={form.url} onChange={(e) => setField("url", e.target.value)} />
-          <Input type="number" min="0" placeholder="Price" value={form.price} onChange={(e) => setField("price", e.target.value)} />
-          <Input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-          <Input placeholder="Notes" value={form.notes} onChange={(e) => setField("notes", e.target.value)} />
-          <Button type="submit" className="w-full">Save to wishlist</Button>
-        </form>
-      </Modal>
+      <AddWishlistModal open={open} onClose={() => setOpen(false)} />
     </div>
   );
 }

@@ -94,6 +94,14 @@ export type WishlistItem = {
   updatedAt: string;
 };
 
+export interface ImageResult {
+  imageUrl: string;
+  title: string;
+  brand: string;
+  site: string;
+  link: string;
+}
+
 export type StyleProfile = {
   id: string;
   userId: string;

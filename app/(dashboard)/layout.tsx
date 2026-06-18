@@ -2,6 +2,7 @@
 
 import { Navbar } from "@/components/app/navbar";
 import { useAuth } from "@/components/providers/auth-provider";
+import { AddModalProvider } from "@/lib/add-modal-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -22,9 +23,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
-      <Navbar />
-      <main className="mx-auto max-w-5xl px-4 pt-6 pb-24 md:pb-10">{children}</main>
-    </div>
+    <AddModalProvider>
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <main className="mx-auto max-w-5xl px-4 pt-6 pb-28 md:pb-10">{children}</main>
+      </div>
+    </AddModalProvider>
   );
 }

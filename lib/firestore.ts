@@ -35,13 +35,17 @@ export function subscribeToUserCollection<T>(
   );
 }
 
+function omitUndefined(obj: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
+}
+
 export async function createItem<T extends { userId: string }>(name: CollectionName, data: T) {
   const now = new Date().toISOString();
-  return addDoc(collection(db, name), { ...data, createdAt: now, updatedAt: now });
+  return addDoc(collection(db, name), omitUndefined({ ...data, createdAt: now, updatedAt: now }));
 }
 
 export async function updateItem(name: CollectionName, id: string, data: Record<string, unknown>) {
-  return updateDoc(doc(db, name, id), { ...data, updatedAt: new Date().toISOString() });
+  return updateDoc(doc(db, name, id), omitUndefined({ ...data, updatedAt: new Date().toISOString() }));
 }
 
 export async function upsertItem<T extends object>(name: CollectionName, id: string, data: T) {

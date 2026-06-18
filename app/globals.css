@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FAFAFA;
+  --background: #FFFFFF;
   --foreground: #111111;
   --card: #FFFFFF;
   --border: #E8E8E8;
@@ -58,6 +58,20 @@ body {
 
 .animate-rise {
   animation: riseIn 0.3s ease-out both;
+}
+
+/* Utility: hide scrollbar but keep scrollable */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* iOS safe-area bottom padding for the nav bar */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px);
 }
 
 @media (prefers-reduced-motion: reduce) {
