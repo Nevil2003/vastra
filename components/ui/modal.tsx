@@ -29,18 +29,18 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-[#17152D]/55 p-0 backdrop-blur-sm motion-safe:animate-[fadeIn_0.18s_ease-out] sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm motion-safe:animate-[fadeIn_0.18s_ease-out] sm:items-center sm:p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-[#E5DACB] bg-[#FFFDF8] p-6 shadow-2xl shadow-[#17152D]/25 motion-safe:animate-[scaleIn_0.2s_ease-out] sm:rounded-2xl">
+      <div className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-[#E8E8E8] bg-white p-6 shadow-2xl motion-safe:animate-[scaleIn_0.2s_ease-out] sm:rounded-2xl">
         <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="font-serif text-2xl font-semibold text-[#17152D]">{title}</h2>
+          <h2 className="text-lg font-semibold text-[#111111]">{title}</h2>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="rounded-full p-1.5 text-[#857C73] transition hover:bg-[#E5DACB] hover:text-[#211F32]"
+            className="rounded-full p-1.5 text-[#888888] transition hover:bg-[#F5F5F5] hover:text-[#111111]"
           >
             <X className="h-5 w-5" />
           </button>

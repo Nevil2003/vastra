@@ -1,12 +1,19 @@
+import Link from "next/link";
+
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#EEE5FF_0,#F8F3EA_24rem,#F8F3EA_100%)] px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="font-serif text-4xl font-semibold tracking-widest text-[#17152D]">VASTRA</h1>
-          <p className="mt-2 text-[#5F596B]">Wardrobe, outfits, stitching, and measurements</p>
+    <div className="flex min-h-screen flex-col bg-white">
+      <header className="border-b border-[#E8E8E8]">
+        <div className="mx-auto flex h-14 max-w-5xl items-center px-4">
+          <Link href="/" className="text-xl font-bold tracking-tight text-[#111111]">
+            vastra
+          </Link>
         </div>
-        {children}
+      </header>
+      <div className="flex flex-1 items-center justify-center px-4 py-12">
+        <div className="w-full max-w-sm">
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -12,25 +12,25 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", isLoading, asSpan, children, ...props }, ref) => {
     const variants = {
       primary:
-        "bg-[#3C3489] text-[#FFFDF8] shadow-sm shadow-[#3C3489]/25 hover:bg-[#2F2870] focus-visible:ring-[#3C3489]/40",
+        "bg-[#111111] text-white hover:bg-[#333333] focus-visible:ring-[#111111]/40",
       secondary:
-        "bg-[#17152D] text-[#FFFDF8] hover:bg-[#C8793D] hover:text-[#17152D] focus-visible:ring-[#C8793D]/40",
+        "bg-[#F5F5F5] text-[#111111] hover:bg-[#E8E8E8] focus-visible:ring-[#111111]/20",
       outline:
-        "border border-[#3C3489] text-[#3C3489] hover:bg-[#3C3489] hover:text-[#FFFDF8] focus-visible:ring-[#3C3489]/30",
-      ghost: "text-[#211F32] hover:bg-[#E5DACB] focus-visible:ring-[#3C3489]/20",
-      danger: "bg-[#B3261E] text-white hover:bg-[#8F1D17] focus-visible:ring-[#B3261E]/40",
+        "border border-[#111111] text-[#111111] hover:bg-[#111111] hover:text-white focus-visible:ring-[#111111]/30",
+      ghost: "text-[#111111] hover:bg-[#F0F0F0] focus-visible:ring-[#111111]/20",
+      danger: "bg-[#EF4444] text-white hover:bg-[#DC2626] focus-visible:ring-[#EF4444]/40",
     };
 
     const sizes = {
       sm: "px-3.5 py-1.5 text-sm",
-      md: "px-5 py-2.5 text-base",
-      lg: "px-8 py-3 text-lg",
+      md: "px-5 py-2.5 text-sm",
+      lg: "px-8 py-3 text-base",
     };
 
     const classes = cn(
-      "inline-flex items-center justify-center gap-2 rounded-full font-semibold",
+      "inline-flex items-center justify-center gap-2 rounded-full font-medium",
       "transition-all duration-200 ease-out active:scale-[0.97]",
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F8F3EA]",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAFAFA]",
       "disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100",
       variants[variant],
       sizes[size],

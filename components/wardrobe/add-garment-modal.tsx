@@ -20,8 +20,8 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
   const [form, setForm] = useState({
     name: "",
     category: "Top" as GarmentCategory,
-    color: "#3C3489",
-    colorName: "Indigo",
+    color: "#111111",
+    colorName: "",
     brand: "",
     size: "",
     fabric: "",
@@ -37,7 +37,7 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
   });
 
   function setField(name: string, value: string) {
-    setForm((current) => ({ ...current, [name]: value }));
+    setForm((c) => ({ ...c, [name]: value }));
   }
 
   async function submit(e: FormEvent) {
@@ -51,7 +51,7 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
         name: form.name,
         category: form.category,
         color: form.color,
-        colorName: form.colorName,
+        colorName: form.colorName || form.color,
         imageUrl,
         brand: form.brand,
         size: form.size,
@@ -69,7 +69,7 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
         measurements: {},
       });
       onClose();
-      setForm((current) => ({ ...current, name: "", brand: "", size: "", fabric: "", price: "", notes: "" }));
+      setForm((c) => ({ ...c, name: "", brand: "", size: "", fabric: "", price: "", notes: "", colorName: "" }));
       setFile(null);
     } finally {
       setLoading(false);
@@ -77,32 +77,35 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Add wardrobe item">
-      <form onSubmit={submit} className="space-y-4">
+    <Modal open={open} onClose={onClose} title="Add to closet">
+      <form onSubmit={submit} className="space-y-3">
         <Input required placeholder="Item name" value={form.name} onChange={(e) => setField("name", e.target.value)} />
+
         <div className="grid gap-3 sm:grid-cols-2">
           <Select value={form.category} onChange={(e) => setField("category", e.target.value)}>
-            {categories.map((category) => <option key={category}>{category}</option>)}
+            {categories.map((cat) => <option key={cat}>{cat}</option>)}
           </Select>
-          <Input placeholder="Color name" value={form.colorName} onChange={(e) => setField("colorName", e.target.value)} />
+          <Input placeholder="Color name (e.g. Navy)" value={form.colorName} onChange={(e) => setField("colorName", e.target.value)} />
         </div>
-        <div className="grid gap-3 sm:grid-cols-[80px_1fr]">
-          <Input type="color" value={form.color} onChange={(e) => setField("color", e.target.value)} className="h-11 p-1" />
+
+        <div className="grid gap-3 grid-cols-[64px_1fr]">
+          <Input type="color" value={form.color} onChange={(e) => setField("color", e.target.value)} className="h-10 cursor-pointer p-1" />
           <Input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] || null)} />
         </div>
+
         <div className="grid gap-3 sm:grid-cols-2">
-          <Input placeholder="Brand or boutique" value={form.brand} onChange={(e) => setField("brand", e.target.value)} />
+          <Input placeholder="Brand" value={form.brand} onChange={(e) => setField("brand", e.target.value)} />
           <Input placeholder="Size" value={form.size} onChange={(e) => setField("size", e.target.value)} />
           <Input placeholder="Fabric" value={form.fabric} onChange={(e) => setField("fabric", e.target.value)} />
           <Input placeholder="Occasion" value={form.occasion} onChange={(e) => setField("occasion", e.target.value)} />
-          <Input placeholder="Season" value={form.season} onChange={(e) => setField("season", e.target.value)} />
           <Input type="number" min="0" placeholder="Price" value={form.price} onChange={(e) => setField("price", e.target.value)} />
         </div>
-        <div className="rounded-2xl border border-[#E5DACB] bg-[#F8F3EA] p-4">
-          <p className="mb-3 text-sm font-semibold text-[#17152D]">Stitching / alteration</p>
+
+        <div className="rounded-xl border border-[#E8E8E8] bg-[#F8F8F8] p-4 space-y-3">
+          <p className="text-xs font-semibold text-[#888888] uppercase tracking-wider">Stitching</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <Select value={form.stitchingStatus} onChange={(e) => setField("stitchingStatus", e.target.value)}>
-              {stitchingStatuses.map((status) => <option key={status} value={status}>{status.replace("-", " ")}</option>)}
+              {stitchingStatuses.map((s) => <option key={s} value={s}>{s.replace("-", " ")}</option>)}
             </Select>
             <Input type="date" value={form.stitchingDueDate} onChange={(e) => setField("stitchingDueDate", e.target.value)} />
             <Input placeholder="Tailor name" value={form.tailorName} onChange={(e) => setField("tailorName", e.target.value)} />
@@ -110,8 +113,9 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
             <Input type="number" min="0" placeholder="Stitching price" value={form.stitchingPrice} onChange={(e) => setField("stitchingPrice", e.target.value)} />
           </div>
         </div>
+
         <Input placeholder="Notes" value={form.notes} onChange={(e) => setField("notes", e.target.value)} />
-        <Button type="submit" className="w-full" isLoading={loading}>Save item</Button>
+        <Button type="submit" className="w-full" isLoading={loading}>Add to closet</Button>
       </form>
     </Modal>
   );

@@ -15,16 +15,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (loading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F8F3EA] text-[#857C73]">
-        Opening your wardrobe...
+      <div className="flex min-h-screen items-center justify-center bg-white text-[#888888] text-sm">
+        Loading...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#EEE5FF_0,#F8F3EA_24rem,#F8F3EA_100%)]">
+    <div className="min-h-screen bg-[#FAFAFA]">
       <Navbar />
-      <main className="mx-auto max-w-7xl px-4 pb-24 pt-8 md:pb-8">{children}</main>
+      <main className="mx-auto max-w-5xl px-4 pt-6 pb-24 md:pb-10">{children}</main>
     </div>
   );
 }

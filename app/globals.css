@@ -1,20 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #F8F3EA;
-  --foreground: #211F32;
-  --primary: #3C3489;
-  --accent: #C8793D;
-  --dark: #17152D;
-  --border: #E5DACB;
-  --card: #FFFDF8;
+  --background: #FAFAFA;
+  --foreground: #111111;
+  --card: #FFFFFF;
+  --border: #E8E8E8;
+  --muted: #F5F5F5;
+  --muted-foreground: #888888;
+  --primary: #111111;
+  --primary-foreground: #FFFFFF;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Inter", "Segoe UI", Arial, sans-serif;
-  --font-serif: Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", "Helvetica Neue", Arial, sans-serif;
 }
 
 body {
@@ -26,20 +26,19 @@ body {
 }
 
 ::selection {
-  background: #3C3489;
-  color: #FFFDF8;
+  background: #111111;
+  color: #FFFFFF;
 }
 
-/* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F8F3EA;
+  background: #F5F5F5;
 }
 ::-webkit-scrollbar-thumb {
-  background: #3C3489;
-  border-radius: 4px;
+  background: #D4D4D4;
+  border-radius: 3px;
 }
 
 @keyframes fadeIn {
@@ -53,18 +52,16 @@ body {
 }
 
 @keyframes riseIn {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-rise {
-  animation: riseIn 0.4s ease-out both;
+  animation: riseIn 0.3s ease-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
