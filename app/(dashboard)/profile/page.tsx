@@ -1,6 +1,8 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+/* eslint-disable react-hooks/set-state-in-effect */
+
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Save } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
@@ -31,6 +33,24 @@ export default function ProfilePage() {
     shoulder: profile?.measurements?.shoulder || "",
     preferredTailor: profile?.preferredTailor || "",
   });
+
+  useEffect(() => {
+    if (!profile) return;
+    setForm({
+      displayName: profile.displayName || user?.displayName || "",
+      city: profile.city || "",
+      styleWords: profile.styleWords?.join(", ") || "",
+      favoriteColors: profile.favoriteColors?.join(", ") || "",
+      topSize: profile.sizes?.top || "",
+      bottomSize: profile.sizes?.bottom || "",
+      shoeSize: profile.sizes?.shoe || "",
+      chest: profile.measurements?.chest || "",
+      waist: profile.measurements?.waist || "",
+      hip: profile.measurements?.hip || "",
+      shoulder: profile.measurements?.shoulder || "",
+      preferredTailor: profile.preferredTailor || "",
+    });
+  }, [profile, user?.displayName]);
 
   const stats = useMemo(() => {
     const value = garments.reduce((sum, item) => sum + (item.price || 0), 0);

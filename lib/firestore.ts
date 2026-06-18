@@ -40,7 +40,7 @@ export async function createItem<T extends { userId: string }>(name: CollectionN
   return addDoc(collection(db, name), { ...data, createdAt: now, updatedAt: now });
 }
 
-export async function updateItem<T extends object>(name: CollectionName, id: string, data: Partial<T>) {
+export async function updateItem(name: CollectionName, id: string, data: Record<string, unknown>) {
   return updateDoc(doc(db, name, id), { ...data, updatedAt: new Date().toISOString() });
 }
 

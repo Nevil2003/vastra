@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { increment } from "firebase/firestore";
 import { CheckCircle2, Plus } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
@@ -48,10 +49,10 @@ export default function WearLogPage() {
       occasion: form.occasion,
       notes: form.notes,
     });
-    if (outfit) await updateItem<Outfit>("outfits", outfit.id, { wornCount: (outfit.wornCount || 0) + 1, lastWorn: form.date });
+    if (outfit) await updateItem("outfits", outfit.id, { wornCount: increment(1), lastWorn: form.date });
     await Promise.all(garmentIds.map((id) => {
       const garment = garments.find((item) => item.id === id);
-      return garment ? updateItem<Garment>("garments", id, { wearCount: (garment.wearCount || 0) + 1, lastWorn: form.date }) : Promise.resolve();
+      return garment ? updateItem("garments", id, { wearCount: increment(1), lastWorn: form.date }) : Promise.resolve();
     }));
     setForm({ date: new Date().toISOString().slice(0, 10), outfitId: "", garmentId: "", occasion: "", notes: "" });
   }

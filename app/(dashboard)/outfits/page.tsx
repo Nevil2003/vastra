@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { increment } from "firebase/firestore";
 import { Check, Plus, Shirt } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { GarmentCard } from "@/components/wardrobe/garment-card";
@@ -49,10 +50,10 @@ export default function OutfitsPage() {
       outfitId: outfit.id,
       occasion: outfit.occasion,
     });
-    await updateItem<Outfit>("outfits", outfit.id, { wornCount: (outfit.wornCount || 0) + 1, lastWorn: today });
+    await updateItem("outfits", outfit.id, { wornCount: increment(1), lastWorn: today });
     await Promise.all(outfit.garmentIds.map((id) => {
       const garment = garments.find((item) => item.id === id);
-      return garment ? updateItem<Garment>("garments", id, { wearCount: (garment.wearCount || 0) + 1, lastWorn: today }) : Promise.resolve();
+      return garment ? updateItem("garments", id, { wearCount: increment(1), lastWorn: today }) : Promise.resolve();
     }));
   }
 

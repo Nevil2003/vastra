@@ -79,7 +79,7 @@ export default function WishlistPage() {
               {item.notes ? <p className="mt-3 text-sm text-[#5F596B]">{item.notes}</p> : null}
               <div className="mt-4 flex gap-2">
                 {item.url ? <a href={item.url} target="_blank" rel="noreferrer"><Button size="sm" variant="outline" className="gap-2"><ExternalLink className="h-4 w-4" /> Open</Button></a> : null}
-                <Button size="sm" onClick={() => updateItem<WishlistItem>("wishlist", item.id, { purchased: true })} className="gap-2"><Check className="h-4 w-4" /> Purchased</Button>
+                <Button size="sm" onClick={() => updateItem("wishlist", item.id, { purchased: true })} className="gap-2"><Check className="h-4 w-4" /> Purchased</Button>
               </div>
             </CardContent>
           </Card>
