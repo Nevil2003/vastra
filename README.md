@@ -31,6 +31,7 @@ No AI is required. The app is built around manual control, fast entry, and the r
 3. Create a Firestore database.
 4. Enable Firebase Storage.
 5. Copy `.env.example` to `.env.local` and fill the Firebase web app keys.
+6. In Firebase Authentication, enable Email/Password and Google as sign-in providers.
 
 ```bash
 npm install
@@ -38,6 +39,8 @@ npm run dev
 ```
 
 Open `http://localhost:3000`.
+
+This repo is configured for Firebase project `vastra-a8fe2` / project number `944623325144`.
 
 ## Firestore Collections
 

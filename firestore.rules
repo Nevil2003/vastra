@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /garments/{docId} {
+      allow read, update, delete: if isOwner();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /outfits/{docId} {
+      allow read, update, delete: if isOwner();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /occasions/{docId} {
+      allow read, update, delete: if isOwner();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /wearLogs/{docId} {
+      allow read, update, delete: if isOwner();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /wishlist/{docId} {
+      allow read, update, delete: if isOwner();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    match /profiles/{docId} {
+      allow read, update, delete: if isOwner();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner() {
+      return isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}
