@@ -10,7 +10,6 @@ No AI is required. The app is built around manual control, fast entry, and the r
 - React + TypeScript
 - Firebase Auth
 - Firestore
-- Firebase Storage
 - Tailwind CSS
 
 ## Screens
@@ -29,9 +28,8 @@ No AI is required. The app is built around manual control, fast entry, and the r
 1. Create a Firebase project.
 2. Enable Email/Password and Google sign-in in Firebase Auth.
 3. Create a Firestore database.
-4. Enable Firebase Storage.
-5. Copy `.env.example` to `.env.local` and fill the Firebase web app keys.
-6. In Firebase Authentication, enable Email/Password and Google as sign-in providers.
+4. Copy `.env.example` to `.env.local` and fill the Firebase web app keys.
+5. In Firebase Authentication, enable Email/Password and Google as sign-in providers.
 
 ```bash
 npm install
@@ -55,6 +53,10 @@ The app writes these top-level collections:
 
 Every document includes `userId`, so security rules should require `request.auth.uid == resource.data.userId` for reads/writes.
 
+## Images
+
+Vastra does not require Firebase Storage for the MVP. Uploaded garment and wishlist photos are compressed in the browser and stored as small data URLs inside Firestore documents. This avoids needing a billing account while the product is still early.
+
 ## Suggested Firestore Rules
 
 ```txt
@@ -64,19 +66,6 @@ service cloud.firestore {
     match /{collection}/{docId} {
       allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-    }
-  }
-}
-```
-
-## Suggested Storage Rules
-
-```txt
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /{userId}/{allPaths=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
