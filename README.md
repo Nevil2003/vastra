@@ -1,78 +1,80 @@
-# Vastra - AI Digital Closet
+# Vastra
 
-A full-stack, AI-powered digital closet and outfit discovery app built for the Indian market.
+Vastra is a clean wardrobe utility for outfits, occasions, stitching, measurements, wear logs, and wishlist planning.
 
-## Features
+No AI is required. The app is built around manual control, fast entry, and the real workflows people have around clothes: planning outfits, remembering measurements, tracking tailor work, and wearing more of what they already own.
 
-- 📱 AI auto-tagging of clothing from photos (Google Gemini Vision)
-- 👔 Digital closet with search, filters & brand tracking
-- 🎨 Outfit builder with AI color matching & occasion recommendations
-- 🌅 Daily AI outfit pick based on weather & wardrobe
-- 💰 Wardrobe valuation (insurance-ready)
-- 💎 Stripe subscription gating for Pro (₹99/mo)
-- 💬 WhatsApp outfit sharing
-- 🇮🇳 Indian sizes, weather, occasions & wedding-focused
+## Stack
 
-## Tech Stack
+- Next.js App Router
+- React + TypeScript
+- Firebase Auth
+- Firestore
+- Firebase Storage
+- Tailwind CSS
 
-- Next.js 16 App Router + React 19 + TypeScript
-- Tailwind CSS v4
-- Prisma ORM + SQLite (local) / PostgreSQL (production)
-- JWT auth (iron-session style via jose)
-- Google Gemini API
-- Stripe Checkout + Webhooks
-- Cloudinary (optional, base64 fallback)
+## Screens
 
-## Quick Start
+- `/login` and `/signup`: email/password and Google auth
+- `/home`: dashboard, stats, stitching tasks, upcoming occasion
+- `/wardrobe`: garment/fabric grid, filters, image upload, stitching details
+- `/outfits`: manual outfit builder and lookbook
+- `/occasions`: event planning with saved looks
+- `/log`: daily wear logging and streaks
+- `/wishlist`: shopping wishlist with price, URL, image, and priority
+- `/profile`: sizes, measurements, colors, style words, preferred tailor
+
+## Setup
+
+1. Create a Firebase project.
+2. Enable Email/Password and Google sign-in in Firebase Auth.
+3. Create a Firestore database.
+4. Enable Firebase Storage.
+5. Copy `.env.example` to `.env.local` and fill the Firebase web app keys.
 
 ```bash
 npm install
-
-# Set environment variables
-cp .env.example .env
-# Edit .env with your keys
-
-# Run migrations & seed local DB
-npx prisma migrate dev
-npx prisma generate
-
-# Run dev server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open `http://localhost:3000`.
 
-## Environment Variables
+## Firestore Collections
 
-```env
-DATABASE_URL="file:./dev.db"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-JWT_SECRET="change-me"
-GEMINI_API_KEY="your-gemini-key"
-STRIPE_PUBLISHABLE_KEY="pk_test_..."
-STRIPE_SECRET_KEY="sk_test_..."
-STRIPE_PRICE_ID="price_..."
-STRIPE_WEBHOOK_SECRET="whsec_..."
-CLOUDINARY_CLOUD_NAME="..."
-CLOUDINARY_API_KEY="..."
-CLOUDINARY_API_SECRET="..."
+The app writes these top-level collections:
+
+- `garments`
+- `outfits`
+- `occasions`
+- `wearLogs`
+- `wishlist`
+- `profiles`
+
+Every document includes `userId`, so security rules should require `request.auth.uid == resource.data.userId` for reads/writes.
+
+## Suggested Firestore Rules
+
+```txt
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{collection}/{docId} {
+      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+  }
+}
 ```
 
-## Production Deployment
+## Suggested Storage Rules
 
-1. Create a PostgreSQL database (Supabase / Neon / Vercel Postgres).
-2. Set `DATABASE_URL` to your Postgres connection string.
-3. Run `npx prisma migrate deploy`.
-4. Add all env vars to Vercel.
-5. Deploy with `vercel --prod`.
-
-## Stripe Webhook
-
-For local testing:
-```bash
-stripe listen --forward-to localhost:3000/api/subscription/webhook
+```txt
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
 ```
-
-## License
-
-Proprietary - Vastra product by Nevil Parekh.
