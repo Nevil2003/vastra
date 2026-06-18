@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { Shirt } from "lucide-react";
 import { Garment } from "@/types";
 import { cn } from "@/lib/utils";
 
-type ViewMode = "grid2" | "grid3" | "list";
+export type ViewMode = "grid2" | "grid3" | "list";
 
 export function GarmentCard({
   garment,
@@ -17,17 +18,24 @@ export function GarmentCard({
   onClick?: () => void;
   viewMode?: ViewMode;
 }) {
+  // When onClick is provided (e.g. outfit builder picker), stay as a button.
+  // Otherwise, link to the item detail page.
+  const Wrapper = onClick
+    ? ({ children, className }: { children: React.ReactNode; className?: string }) => (
+        <button type="button" onClick={onClick} className={className}>{children}</button>
+      )
+    : ({ children, className }: { children: React.ReactNode; className?: string }) => (
+        <Link href={`/closet/${garment.id}`} className={className}>{children}</Link>
+      );
+
   if (viewMode === "list") {
     return (
-      <button
-        type="button"
-        onClick={onClick}
+      <Wrapper
         className={cn(
           "group flex w-full items-center gap-3 rounded-2xl border border-[#F0F0F0] bg-white px-3 py-3 text-left transition-all duration-200 hover:border-[#DDDDDD] hover:shadow-sm active:scale-[0.99]",
           selected && "border-[#111111] ring-1 ring-[#111111]"
         )}
       >
-        {/* Thumbnail */}
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#F5F5F5]">
           {garment.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -38,34 +46,29 @@ export function GarmentCard({
             </div>
           )}
         </div>
-        {/* Info */}
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-[#111111]">{garment.name}</p>
           <p className="mt-0.5 text-xs text-[#AAAAAA]">
             {garment.category}{garment.brand ? ` · ${garment.brand}` : ""}
           </p>
         </div>
-        {/* Color + wear */}
         <div className="flex shrink-0 flex-col items-end gap-1.5">
           <span className="h-4 w-4 rounded-full border border-white shadow-sm" style={{ background: garment.color }} />
           {garment.wearCount > 0 && (
             <span className="text-[10px] text-[#BBBBBB]">{garment.wearCount}×</span>
           )}
         </div>
-      </button>
+      </Wrapper>
     );
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <Wrapper
       className={cn(
-        "group w-full text-left transition-all duration-200",
+        "group block w-full text-left transition-all duration-200",
         selected && "ring-2 ring-[#111111] ring-offset-2 rounded-2xl"
       )}
     >
-      {/* Image */}
       <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-[#F5F5F5]">
         {garment.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -79,14 +82,11 @@ export function GarmentCard({
             <Shirt className={cn("text-[#D0D0D0]", viewMode === "grid3" ? "h-6 w-6" : "h-10 w-10")} />
           </div>
         )}
-        {/* Color dot */}
         <span
           className="absolute bottom-2 right-2 h-3.5 w-3.5 rounded-full border-2 border-white shadow-sm"
           style={{ background: garment.color }}
         />
       </div>
-
-      {/* Info */}
       <div className="mt-1.5 px-0.5">
         <p className={cn("truncate font-medium text-[#111111]", viewMode === "grid3" ? "text-xs" : "text-sm")}>
           {garment.name}
@@ -95,6 +95,6 @@ export function GarmentCard({
           {garment.category}
         </p>
       </div>
-    </button>
+    </Wrapper>
   );
 }

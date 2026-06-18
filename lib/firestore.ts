@@ -14,7 +14,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-export type CollectionName = "garments" | "outfits" | "occasions" | "wearLogs" | "wishlist" | "profiles";
+export type CollectionName = "garments" | "outfits" | "occasions" | "wearLogs" | "wishlist" | "profiles" | "outfitPlans";
 
 export function userCollection(name: CollectionName, userId: string) {
   return query(collection(db, name), where("userId", "==", userId), orderBy("createdAt", "desc"));

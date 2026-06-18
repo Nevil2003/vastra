@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, ElementType, FormEvent, useState } from "react";
+import { ChangeEvent, ElementType, FormEvent, useEffect, useState } from "react";
 import {
   Briefcase, Camera, Crown, Gem, Layers, Link2,
   Palette, Scissors, Search, Shirt, Sparkles, Star, Wind, X,
@@ -11,10 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { ImageSelection, SearchOverlay } from "@/components/wardrobe/search-overlay";
-import { createItem } from "@/lib/firestore";
+import { createItem, updateItem } from "@/lib/firestore";
 import { uploadUserImage } from "@/lib/storage";
 import { cn } from "@/lib/utils";
-import { Garment, GarmentCategory, StitchingStatus } from "@/types";
+import {
+  Garment, GarmentCategory, GarmentCondition, GarmentTag,
+  StitchingStatus, WeatherTag,
+} from "@/types";
+
+// ─── Static config ────────────────────────────────────────────────────────────
 
 const CATEGORIES: { name: GarmentCategory; icon: ElementType }[] = [
   { name: "Top",       icon: Shirt },
@@ -31,38 +36,126 @@ const CATEGORIES: { name: GarmentCategory; icon: ElementType }[] = [
   { name: "Beauty",    icon: Palette },
 ];
 
-const stitchingStatuses: StitchingStatus[] = [
+const STITCHING_STATUSES: StitchingStatus[] = [
   "not-needed", "to-stitch", "with-tailor", "trial", "ready", "delivered",
+];
+
+const SEASONS = ["Spring", "Summer", "Autumn", "Winter", "All Season"];
+const OCCASIONS = ["Casual", "Work", "Party", "Date", "Travel", "Formal", "Wedding", "Gym"];
+const WEATHER_OPTS: { value: WeatherTag; label: string }[] = [
+  { value: "hot",  label: "Hot" },
+  { value: "cold", label: "Cold" },
+  { value: "rain", label: "Rain" },
+  { value: "wind", label: "Windy" },
+];
+const CONDITION_OPTS: GarmentCondition[] = ["new", "excellent", "good", "fair", "poor"];
+const TAG_OPTS: { value: GarmentTag; label: string }[] = [
+  { value: "favorite",         label: "Favourite" },
+  { value: "rarely-worn",      label: "Rarely worn" },
+  { value: "donate-maybe",     label: "Donate?" },
+  { value: "needs-alteration", label: "Needs alteration" },
+  { value: "sentimental",      label: "Sentimental" },
 ];
 
 type ImageMode = "photo" | "search" | "url";
 
-export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+interface FormState {
+  name: string;
+  category: GarmentCategory;
+  subcategory: string;
+  color: string;
+  colorName: string;
+  brand: string;
+  size: string;
+  fabric: string;
+  occasion: string;
+  season: string;
+  price: string;
+  purchaseDate: string;
+  condition: string;
+  notes: string;
+  stitchingStatus: StitchingStatus;
+}
+
+const BLANK_FORM: FormState = {
+  name: "", category: "Top", subcategory: "", color: "#111111", colorName: "",
+  brand: "", size: "", fabric: "", occasion: "", season: "", price: "",
+  purchaseDate: "", condition: "", notes: "", stitchingStatus: "not-needed",
+};
+
+function garmentToForm(g: Garment): FormState {
+  return {
+    name:            g.name,
+    category:        g.category,
+    subcategory:     g.subcategory ?? "",
+    color:           g.color,
+    colorName:       g.colorName ?? "",
+    brand:           g.brand ?? "",
+    size:            g.size ?? "",
+    fabric:          g.fabric ?? "",
+    occasion:        g.occasion ?? "",
+    season:          g.season ?? "",
+    price:           g.price?.toString() ?? "",
+    purchaseDate:    g.purchaseDate ?? "",
+    condition:       g.condition ?? "",
+    notes:           g.notes ?? "",
+    stitchingStatus: g.stitchingStatus ?? "not-needed",
+  };
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  /** Pass an existing garment to open in edit mode */
+  editGarment?: Garment;
+}
+
+export function AddGarmentModal({ open, onClose, editGarment }: Props) {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [imageMode, setImageMode] = useState<ImageMode>("photo");
+  const isEdit = Boolean(editGarment);
+
+  const [loading, setLoading]       = useState(false);
+  const [error, setError]           = useState("");
+  const [imageMode, setImageMode]   = useState<ImageMode>("photo");
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [overlayMode, setOverlayMode] = useState<"search" | "url">("search");
 
-  // Image state
-  const [file, setFile] = useState<File | null>(null);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [file, setFile]                   = useState<File | null>(null);
+  const [filePreview, setFilePreview]     = useState<string | null>(null);
   const [externalImageUrl, setExternalImageUrl] = useState<string | null>(null);
 
-  const [form, setForm] = useState({
-    name: "",
-    category: "Top" as GarmentCategory,
-    color: "#111111",
-    colorName: "",
-    brand: "",
-    size: "",
-    fabric: "",
-    occasion: "",
-    price: "",
-    notes: "",
-    stitchingStatus: "not-needed" as StitchingStatus,
-  });
+  const [form, setForm]               = useState<FormState>(BLANK_FORM);
+  const [weatherTags, setWeatherTags] = useState<WeatherTag[]>([]);
+  const [tags, setTags]               = useState<GarmentTag[]>([]);
+
+  // Reset / pre-fill when modal opens or switches edit target
+  useEffect(() => {
+    if (!open) return;
+    if (editGarment) {
+      setForm(garmentToForm(editGarment));
+      setWeatherTags(editGarment.weatherTags ?? []);
+      setTags(editGarment.tags ?? []);
+      if (editGarment.imageUrl) {
+        setExternalImageUrl(editGarment.imageUrl);
+        setImageMode("url");
+      } else {
+        setExternalImageUrl(null);
+        setImageMode("photo");
+      }
+    } else {
+      setForm(BLANK_FORM);
+      setWeatherTags([]);
+      setTags([]);
+      setExternalImageUrl(null);
+      setImageMode("photo");
+    }
+    setFile(null);
+    setFilePreview(null);
+    setError("");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editGarment?.id]);
 
   function setField(name: string, value: string) {
     setForm((c) => ({ ...c, [name]: value }));
@@ -97,16 +190,24 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
     setExternalImageUrl(null);
   }
 
+  function toggleWeather(tag: WeatherTag) {
+    setWeatherTags((w) => w.includes(tag) ? w.filter((t) => t !== tag) : [...w, tag]);
+  }
+
+  function toggleTag(tag: GarmentTag) {
+    setTags((t) => t.includes(tag) ? t.filter((x) => x !== tag) : [...t, tag]);
+  }
+
   function reset() {
-    clearImage();
+    setForm(BLANK_FORM);
+    setWeatherTags([]);
+    setTags([]);
+    setFile(null);
+    setFilePreview(null);
+    setExternalImageUrl(null);
     setImageMode("photo");
     setOverlayOpen(false);
     setError("");
-    setForm({
-      name: "", category: "Top", color: "#111111", colorName: "",
-      brand: "", size: "", fabric: "", occasion: "", price: "", notes: "",
-      stitchingStatus: "not-needed",
-    });
   }
 
   async function submit(e: FormEvent) {
@@ -116,31 +217,48 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
     if (!user) { setError("You must be signed in"); return; }
     setLoading(true);
     try {
-      let imageUrl: string | undefined;
+      let imageUrl: string | undefined =
+        externalImageUrl && imageMode !== "photo" ? externalImageUrl : undefined;
+
       if (imageMode === "photo" && file) {
         imageUrl = await uploadUserImage(user.uid, "garments", file);
-      } else if ((imageMode === "search" || imageMode === "url") && externalImageUrl) {
+      } else if (imageMode === "photo" && !file && editGarment?.imageUrl) {
+        imageUrl = editGarment.imageUrl; // keep existing image
+      } else if (externalImageUrl) {
         imageUrl = externalImageUrl;
       }
 
-      await createItem<Omit<Garment, "id" | "createdAt" | "updatedAt">>("garments", {
+      const payload = {
         userId: user.uid,
-        name: form.name.trim(),
-        category: form.category,
-        color: form.color,
-        colorName: form.colorName || form.color,
+        name:            form.name.trim(),
+        category:        form.category,
+        subcategory:     form.subcategory || undefined,
+        color:           form.color,
+        colorName:       form.colorName || form.color,
         imageUrl,
-        brand: form.brand || undefined,
-        size: form.size || undefined,
-        fabric: form.fabric || undefined,
-        occasion: form.occasion || undefined,
-        season: "all-season",
-        price: form.price ? Number(form.price) : undefined,
-        wearCount: 0,
-        notes: form.notes || undefined,
+        brand:           form.brand || undefined,
+        size:            form.size || undefined,
+        fabric:          form.fabric || undefined,
+        occasion:        form.occasion || undefined,
+        season:          form.season || undefined,
+        weatherTags:     weatherTags.length ? weatherTags : undefined,
+        price:           form.price ? Number(form.price) : undefined,
+        purchaseDate:    form.purchaseDate || undefined,
+        condition:       (form.condition as GarmentCondition) || undefined,
+        tags:            tags.length ? tags : undefined,
+        notes:           form.notes || undefined,
         stitchingStatus: form.stitchingStatus,
-        measurements: {},
-      });
+        measurements:    editGarment?.measurements ?? {},
+      };
+
+      if (isEdit && editGarment) {
+        await updateItem("garments", editGarment.id, payload);
+      } else {
+        await createItem<Omit<Garment, "id" | "createdAt" | "updatedAt">>("garments", {
+          ...payload,
+          wearCount: 0,
+        });
+      }
       onClose();
       reset();
     } catch (err) {
@@ -152,7 +270,11 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
 
   return (
     <>
-      <Modal open={open} onClose={() => { onClose(); reset(); }} title="Add to closet">
+      <Modal
+        open={open}
+        onClose={() => { onClose(); reset(); }}
+        title={isEdit ? "Edit item" : "Add to closet"}
+      >
         <form onSubmit={submit} className="space-y-5">
 
           {/* Name */}
@@ -162,7 +284,7 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
             onChange={(e) => { setField("name", e.target.value); setError(""); }}
           />
 
-          {/* Category picker */}
+          {/* Category */}
           <div>
             <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-[#888888]">Category</p>
             <div className="grid grid-cols-4 gap-2">
@@ -189,11 +311,9 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
             </div>
           </div>
 
-          {/* Image source */}
+          {/* Image */}
           <div>
             <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-[#888888]">Photo</p>
-
-            {/* Tabs */}
             <div className="flex rounded-xl border border-[#E8E8E8] bg-[#F8F8F8] p-1 gap-1">
               {([
                 { key: "photo" as ImageMode, icon: Camera, label: "Upload" },
@@ -206,26 +326,30 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
                   onClick={() => setImageMode(key)}
                   className={cn(
                     "flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition-all duration-200",
-                    imageMode === key
-                      ? "bg-white text-[#111111] shadow-sm"
-                      : "text-[#AAAAAA] hover:text-[#111111]"
+                    imageMode === key ? "bg-white text-[#111111] shadow-sm" : "text-[#AAAAAA] hover:text-[#111111]"
                   )}
                 >
-                  <Icon className="h-4 w-4" />
-                  {label}
+                  <Icon className="h-4 w-4" /> {label}
                 </button>
               ))}
             </div>
 
             <div className="mt-3">
-              {/* Photo tab */}
               {imageMode === "photo" && (
                 <div className="animate-rise">
                   {filePreview ? (
                     <div className="relative aspect-[4/3] overflow-hidden rounded-xl">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={filePreview} alt="Preview" className="h-full w-full object-cover" />
-                      <button type="button" onClick={clearImage} className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition">
+                      <button type="button" onClick={clearImage} className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white transition hover:bg-black/80">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : externalImageUrl && isEdit ? (
+                    <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-[#F5F5F5]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={externalImageUrl} alt="Current" className="h-full w-full object-cover" />
+                      <button type="button" onClick={clearImage} className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white transition hover:bg-black/80">
                         <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
@@ -239,49 +363,39 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
                 </div>
               )}
 
-              {/* Search tab */}
               {imageMode === "search" && (
                 <div className="animate-rise">
                   {externalImageUrl ? (
                     <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-[#F5F5F5]">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={externalImageUrl} alt="Selected" className="h-full w-full object-cover" />
-                      <button type="button" onClick={clearImage} className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition">
+                      <button type="button" onClick={clearImage} className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white transition hover:bg-black/80">
                         <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => openOverlay("search")}
-                      className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-[#E8E8E8] px-5 py-8 text-sm text-[#AAAAAA] transition-colors hover:border-[#CCCCCC] hover:text-[#888888]"
-                    >
-                      <Search className="h-5 w-5" />
-                      <span>Search for an image…</span>
+                    <button type="button" onClick={() => openOverlay("search")}
+                      className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-[#E8E8E8] px-5 py-8 text-sm text-[#AAAAAA] transition-colors hover:border-[#CCCCCC]">
+                      <Search className="h-5 w-5" /> <span>Search for an image…</span>
                     </button>
                   )}
                 </div>
               )}
 
-              {/* URL tab */}
               {imageMode === "url" && (
                 <div className="animate-rise">
                   {externalImageUrl ? (
                     <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-[#F5F5F5]">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={externalImageUrl} alt="URL preview" className="h-full w-full object-cover" />
-                      <button type="button" onClick={clearImage} className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition">
+                      <button type="button" onClick={clearImage} className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white transition hover:bg-black/80">
                         <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => openOverlay("url")}
-                      className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-[#E8E8E8] px-5 py-8 text-sm text-[#AAAAAA] transition-colors hover:border-[#CCCCCC] hover:text-[#888888]"
-                    >
-                      <Link2 className="h-5 w-5" />
-                      <span>Paste an image URL…</span>
+                    <button type="button" onClick={() => openOverlay("url")}
+                      className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-[#E8E8E8] px-5 py-8 text-sm text-[#AAAAAA] transition-colors hover:border-[#CCCCCC]">
+                      <Link2 className="h-5 w-5" /> <span>Paste a product page URL…</span>
                     </button>
                   )}
                 </div>
@@ -289,42 +403,116 @@ export function AddGarmentModal({ open, onClose }: { open: boolean; onClose: () 
             </div>
           </div>
 
-          {/* Details */}
+          {/* Core details */}
           <div className="grid gap-3 sm:grid-cols-2">
+            <Input placeholder="Subcategory (e.g. T-Shirt)" value={form.subcategory} onChange={(e) => setField("subcategory", e.target.value)} />
+            <Input placeholder="Brand" value={form.brand} onChange={(e) => setField("brand", e.target.value)} />
             <Input placeholder="Color name (e.g. Navy)" value={form.colorName} onChange={(e) => setField("colorName", e.target.value)} />
             <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={form.color}
-                onChange={(e) => setField("color", e.target.value)}
-                className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-[#E8E8E8] p-1"
-              />
+              <input type="color" value={form.color} onChange={(e) => setField("color", e.target.value)}
+                className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-[#E8E8E8] p-1" />
               <span className="text-xs text-[#888888]">Colour swatch</span>
             </div>
-            <Input placeholder="Brand" value={form.brand} onChange={(e) => setField("brand", e.target.value)} />
             <Input placeholder="Size" value={form.size} onChange={(e) => setField("size", e.target.value)} />
             <Input placeholder="Fabric" value={form.fabric} onChange={(e) => setField("fabric", e.target.value)} />
-            <Input placeholder="Occasion" value={form.occasion} onChange={(e) => setField("occasion", e.target.value)} />
-            <Input type="number" min="0" placeholder="Price" value={form.price} onChange={(e) => setField("price", e.target.value)} />
+            <Input type="number" min="0" placeholder="Price (₹)" value={form.price} onChange={(e) => setField("price", e.target.value)} />
+            <Input type="date" placeholder="Purchase date" value={form.purchaseDate} onChange={(e) => setField("purchaseDate", e.target.value)} />
+          </div>
+
+          {/* Occasion chips */}
+          <div>
+            <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-[#888888]">Occasion</p>
+            <div className="flex flex-wrap gap-2">
+              {OCCASIONS.map((o) => (
+                <button key={o} type="button" onClick={() => setField("occasion", form.occasion === o ? "" : o)}
+                  className={cn("rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                    form.occasion === o ? "bg-[#111111] text-white" : "bg-[#F3F3F3] text-[#888888] hover:bg-[#EBEBEB]"
+                  )}>
+                  {o}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Season chips */}
+          <div>
+            <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-[#888888]">Season</p>
+            <div className="flex flex-wrap gap-2">
+              {SEASONS.map((s) => (
+                <button key={s} type="button" onClick={() => setField("season", form.season === s ? "" : s)}
+                  className={cn("rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                    form.season === s ? "bg-[#111111] text-white" : "bg-[#F3F3F3] text-[#888888] hover:bg-[#EBEBEB]"
+                  )}>
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Weather tags */}
+          <div>
+            <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-[#888888]">Weather</p>
+            <div className="flex flex-wrap gap-2">
+              {WEATHER_OPTS.map(({ value, label }) => (
+                <button key={value} type="button" onClick={() => toggleWeather(value)}
+                  className={cn("rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                    weatherTags.includes(value) ? "bg-[#111111] text-white" : "bg-[#F3F3F3] text-[#888888] hover:bg-[#EBEBEB]"
+                  )}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Condition */}
+          <div>
+            <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-[#888888]">Condition</p>
+            <div className="flex flex-wrap gap-2">
+              {CONDITION_OPTS.map((c) => (
+                <button key={c} type="button" onClick={() => setField("condition", form.condition === c ? "" : c)}
+                  className={cn("rounded-full px-3 py-1.5 text-xs font-semibold transition-colors capitalize",
+                    form.condition === c ? "bg-[#111111] text-white" : "bg-[#F3F3F3] text-[#888888] hover:bg-[#EBEBEB]"
+                  )}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-[#888888]">Tags</p>
+            <div className="flex flex-wrap gap-2">
+              {TAG_OPTS.map(({ value, label }) => (
+                <button key={value} type="button" onClick={() => toggleTag(value)}
+                  className={cn("rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                    tags.includes(value) ? "bg-[#111111] text-white" : "bg-[#F3F3F3] text-[#888888] hover:bg-[#EBEBEB]"
+                  )}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Stitching + notes */}
+          <div className="grid gap-3 sm:grid-cols-2">
             <Select value={form.stitchingStatus} onChange={(e) => setField("stitchingStatus", e.target.value)}>
-              {stitchingStatuses.map((s) => (
+              {STITCHING_STATUSES.map((s) => (
                 <option key={s} value={s}>{s.replace(/-/g, " ")}</option>
               ))}
             </Select>
           </div>
-
           <Input placeholder="Notes" value={form.notes} onChange={(e) => setField("notes", e.target.value)} />
 
           {error && (
             <p className="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</p>
           )}
           <Button type="submit" className="w-full" isLoading={loading}>
-            Add to closet
+            {isEdit ? "Save changes" : "Add to closet"}
           </Button>
         </form>
       </Modal>
 
-      {/* Full-screen search / URL overlay */}
       <SearchOverlay
         open={overlayOpen}
         mode={overlayMode}

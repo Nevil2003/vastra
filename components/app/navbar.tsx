@@ -4,14 +4,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useAddModal } from "@/lib/add-modal-context";
-import { Heart, Plus, Shirt, Sparkles } from "lucide-react";
+import { BarChart3, CalendarDays, Heart, Layers, Plus, Shirt, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { href: "/closet",      label: "Closet" },
-  { href: "/wishlist",    label: "Wishlist" },
-  { href: "/recommended", label: "Recommended" },
-  { href: "/profile",     label: "Profile" },
+  { href: "/closet",    label: "Closet" },
+  { href: "/outfits",   label: "Outfits" },
+  { href: "/calendar",  label: "Calendar" },
+  { href: "/analytics", label: "Analytics" },
+  { href: "/wishlist",  label: "Wishlist" },
+  { href: "/profile",   label: "Profile" },
 ];
 
 export function Navbar() {
@@ -23,7 +25,7 @@ export function Navbar() {
 
   return (
     <>
-      {/* ── Top header (all screen sizes) ───────────────────────────── */}
+      {/* ── Top header ───────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 w-full border-b border-[#E8E8E8] bg-white/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
           <Link href="/closet" className="text-xl font-bold tracking-tight text-[#111111]">
@@ -33,7 +35,7 @@ export function Navbar() {
           {/* Desktop pill tabs */}
           <nav className="hidden items-center gap-1 md:flex">
             {tabs.map(({ href, label }) => {
-              const active = pathname === href;
+              const active = pathname === href || pathname.startsWith(href + "/");
               return (
                 <Link key={href} href={href}
                   className={cn(
@@ -49,7 +51,7 @@ export function Navbar() {
             })}
           </nav>
 
-          {/* Desktop: avatar + add button */}
+          {/* Desktop: avatar + add */}
           <div className="hidden md:flex items-center gap-3">
             <button
               onClick={openAdd}
@@ -71,17 +73,17 @@ export function Navbar() {
         </div>
       </header>
 
-      {/* ── Mobile bottom nav ───────────────────────────────────────── */}
+      {/* ── Mobile bottom nav ────────────────────────────────────────── */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t border-[#E8E8E8] bg-white">
-        <div className="flex items-center justify-around px-4 pb-safe">
+        <div className="flex items-center justify-around px-1 pb-safe">
           {/* Closet */}
           <NavItem href="/closet" label="Closet" pathname={pathname}>
-            <Shirt className="h-6 w-6" />
+            <Shirt className="h-5 w-5" />
           </NavItem>
 
-          {/* Wishlist */}
-          <NavItem href="/wishlist" label="Wishlist" pathname={pathname}>
-            <Heart className="h-6 w-6" />
+          {/* Outfits */}
+          <NavItem href="/outfits" label="Outfits" pathname={pathname}>
+            <Layers className="h-5 w-5" />
           </NavItem>
 
           {/* Centre add button */}
@@ -94,25 +96,28 @@ export function Navbar() {
             </button>
           </div>
 
-          {/* Recommended */}
-          <NavItem href="/recommended" label="For You" pathname={pathname}>
-            <Sparkles className="h-6 w-6" />
+          {/* Calendar */}
+          <NavItem href="/calendar" label="Calendar" pathname={pathname}>
+            <CalendarDays className="h-5 w-5" />
           </NavItem>
 
-          {/* Profile — avatar circle */}
-          <Link href="/profile" className="flex flex-col items-center gap-1 py-3">
+          {/* Analytics */}
+          <NavItem href="/analytics" label="Stats" pathname={pathname}>
+            <BarChart3 className="h-5 w-5" />
+          </NavItem>
+
+          {/* Profile */}
+          <Link href="/profile" className="flex flex-col items-center gap-1 py-3 px-1">
             {photoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={photoUrl} alt="" className={cn(
-                "h-7 w-7 rounded-full object-cover transition",
+                "h-6 w-6 rounded-full object-cover transition",
                 pathname === "/profile" ? "ring-2 ring-[#111111]" : "ring-2 ring-[#E8E8E8]"
               )} />
             ) : (
               <div className={cn(
-                "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition",
-                pathname === "/profile"
-                  ? "bg-[#111111] text-white"
-                  : "bg-[#E8E8E8] text-[#888888]"
+                "flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold transition",
+                pathname === "/profile" ? "bg-[#111111] text-white" : "bg-[#E8E8E8] text-[#888888]"
               )}>
                 {initial}
               </div>
@@ -135,9 +140,9 @@ function NavItem({
 }: {
   href: string; label: string; pathname: string; children: React.ReactNode;
 }) {
-  const active = pathname === href;
+  const active = pathname === href || pathname.startsWith(href + "/");
   return (
-    <Link href={href} className="flex flex-col items-center gap-1 py-3 px-2">
+    <Link href={href} className="flex flex-col items-center gap-1 py-3 px-1">
       <span className={cn("transition", active ? "text-[#111111]" : "text-[#C0C0C0]")}>
         {children}
       </span>

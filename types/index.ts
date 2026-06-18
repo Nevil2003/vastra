@@ -12,13 +12,33 @@ export type GarmentCategory =
   | "Fabric"
   | "Beauty";
 
-export type StitchingStatus = "not-needed" | "to-stitch" | "with-tailor" | "trial" | "ready" | "delivered";
+export type OutfitSlotKey = "top" | "bottom" | "dress" | "shoes" | "outerwear" | "bag" | "accessory";
+
+export type WeatherTag = "hot" | "cold" | "rain" | "wind";
+
+export type GarmentTag =
+  | "favorite"
+  | "donate-maybe"
+  | "needs-alteration"
+  | "rarely-worn"
+  | "sentimental";
+
+export type GarmentCondition = "new" | "excellent" | "good" | "fair" | "poor";
+
+export type StitchingStatus =
+  | "not-needed"
+  | "to-stitch"
+  | "with-tailor"
+  | "trial"
+  | "ready"
+  | "delivered";
 
 export type Garment = {
   id: string;
   userId: string;
   name: string;
   category: GarmentCategory;
+  subcategory?: string;
   color: string;
   colorName: string;
   imageUrl?: string;
@@ -27,15 +47,15 @@ export type Garment = {
   fabric?: string;
   occasion?: string;
   season?: string;
+  weatherTags?: WeatherTag[];
   price?: number;
+  purchaseDate?: string;
+  condition?: GarmentCondition;
+  tags?: GarmentTag[];
   wearCount: number;
   lastWorn?: string;
   notes?: string;
-  tailorName?: string;
-  tailorPhone?: string;
   stitchingStatus: StitchingStatus;
-  stitchingDueDate?: string;
-  stitchingPrice?: number;
   measurements?: Record<string, string>;
   createdAt: string;
   updatedAt: string;
@@ -45,11 +65,41 @@ export type Outfit = {
   id: string;
   userId: string;
   name: string;
-  occasion?: string;
-  notes?: string;
   garmentIds: string[];
+  slots?: Partial<Record<OutfitSlotKey, string>>;
+  occasion?: string;
+  season?: string;
+  weatherTags?: WeatherTag[];
+  tags?: string[];
+  notes?: string;
+  favorite?: boolean;
   wornCount: number;
   lastWorn?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type WearLog = {
+  id: string;
+  userId: string;
+  date: string;
+  garmentIds: string[];
+  outfitId?: string;
+  occasion?: string;
+  notes?: string;
+  createdAt: string;
+};
+
+export type OutfitPlan = {
+  id: string;
+  userId: string;
+  date: string;
+  outfitId?: string;
+  garmentIds: string[];
+  occasion?: string;
+  timeOfDay?: "morning" | "afternoon" | "evening" | "night";
+  notes?: string;
+  worn: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -68,17 +118,6 @@ export type Occasion = {
   updatedAt: string;
 };
 
-export type WearLog = {
-  id: string;
-  userId: string;
-  date: string;
-  garmentIds: string[];
-  outfitId?: string;
-  occasion?: string;
-  notes?: string;
-  createdAt: string;
-};
-
 export type WishlistItem = {
   id: string;
   userId: string;
@@ -94,14 +133,6 @@ export type WishlistItem = {
   updatedAt: string;
 };
 
-export interface ImageResult {
-  imageUrl: string;
-  title: string;
-  brand: string;
-  site: string;
-  link: string;
-}
-
 export type StyleProfile = {
   id: string;
   userId: string;
@@ -114,3 +145,11 @@ export type StyleProfile = {
   preferredTailor?: string;
   updatedAt: string;
 };
+
+export interface ImageResult {
+  imageUrl: string;
+  title: string;
+  brand: string;
+  site: string;
+  link: string;
+}
