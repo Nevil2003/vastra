@@ -2,157 +2,65 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/components/providers/auth-provider";
 import { useAddModal } from "@/lib/add-modal-context";
-import { BarChart3, CalendarDays, Heart, Layers, Plus, Shirt, Sparkles } from "lucide-react";
+import { Home, Plus, Search, Shirt, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const tabs = [
-  { href: "/closet",    label: "Closet" },
-  { href: "/outfits",   label: "Outfits" },
-  { href: "/calendar",  label: "Calendar" },
-  { href: "/analytics", label: "Analytics" },
-  { href: "/wishlist",  label: "Wishlist" },
-  { href: "/profile",   label: "Profile" },
-];
-
 export function Navbar() {
-  const { user } = useAuth();
   const { openAdd } = useAddModal();
   const pathname = usePathname();
-  const initial = (user?.displayName || user?.email || "?")[0].toUpperCase();
-  const photoUrl = user?.photoURL;
 
   return (
-    <>
-      {/* ── Top header ───────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 w-full border-b border-[#E8E8E8] bg-white/95 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-          <Link href="/closet" className="flex items-center">
-            <img
-              src="/local-lookbook-logo.png"
-              alt="Local Lookbook"
-              className="h-9 w-auto object-contain brightness-0"
-            />
-          </Link>
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-100 bg-white">
+      <div className="flex items-center justify-around px-2 h-16 max-w-5xl mx-auto">
+        {/* Home */}
+        <BottomNavItem href="/today" label="Home" pathname={pathname}>
+          <Home className="h-5 w-5" />
+        </BottomNavItem>
 
-          {/* Desktop pill tabs */}
-          <nav className="hidden items-center gap-1 md:flex">
-            {tabs.map(({ href, label }) => {
-              const active = pathname === href || pathname.startsWith(href + "/");
-              return (
-                <Link key={href} href={href}
-                  className={cn(
-                    "px-4 py-2 text-sm font-medium rounded-full transition-colors",
-                    active
-                      ? "bg-[#111111] text-white"
-                      : "text-[#888888] hover:text-[#111111] hover:bg-[#F5F5F5]"
-                  )}
-                >
-                  {label}
-                </Link>
-              );
-            })}
-          </nav>
+        {/* Clothing */}
+        <BottomNavItem href="/closet" label="Clothing" pathname={pathname}>
+          <Shirt className="h-5 w-5" />
+        </BottomNavItem>
 
-          {/* Desktop: avatar + add */}
-          <div className="hidden md:flex items-center gap-3">
-            <button
-              onClick={openAdd}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-[#111111] text-white shadow-sm transition hover:bg-[#333333] active:scale-95"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-            <Link href="/profile">
-              {photoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={photoUrl} alt="" className="h-8 w-8 rounded-full object-cover ring-2 ring-[#E8E8E8]" />
-              ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#111111] text-white text-xs font-semibold">
-                  {initial}
-                </div>
-              )}
-            </Link>
-          </div>
+        {/* Add — elevated FAB */}
+        <div className="flex flex-col items-center -mt-5">
+          <button
+            onClick={openAdd}
+            className="w-14 h-14 rounded-full bg-black flex items-center justify-center shadow-lg transition-transform active:scale-95"
+          >
+            <Plus className="h-6 w-6 text-white" strokeWidth={2.5} />
+          </button>
         </div>
-      </header>
 
-      {/* ── Mobile bottom nav ────────────────────────────────────────── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t border-[#E8E8E8] bg-white">
-        <div className="flex items-center justify-around px-1 pb-safe">
-          {/* Closet */}
-          <NavItem href="/closet" label="Closet" pathname={pathname}>
-            <Shirt className="h-5 w-5" />
-          </NavItem>
+        {/* Search */}
+        <BottomNavItem href="/wardrobe" label="Search" pathname={pathname}>
+          <Search className="h-5 w-5" />
+        </BottomNavItem>
 
-          {/* Outfits */}
-          <NavItem href="/outfits" label="Outfits" pathname={pathname}>
-            <Layers className="h-5 w-5" />
-          </NavItem>
-
-          {/* Centre add button */}
-          <div className="flex flex-col items-center">
-            <button
-              onClick={openAdd}
-              className="flex h-14 w-14 -mt-5 items-center justify-center rounded-full bg-[#111111] text-white shadow-lg transition active:scale-90"
-            >
-              <Plus className="h-6 w-6" strokeWidth={2.5} />
-            </button>
-          </div>
-
-          {/* Calendar */}
-          <NavItem href="/calendar" label="Calendar" pathname={pathname}>
-            <CalendarDays className="h-5 w-5" />
-          </NavItem>
-
-          {/* Analytics */}
-          <NavItem href="/analytics" label="Stats" pathname={pathname}>
-            <BarChart3 className="h-5 w-5" />
-          </NavItem>
-
-          {/* Profile */}
-          <Link href="/profile" className="flex flex-col items-center gap-1 py-3 px-1">
-            {photoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={photoUrl} alt="" className={cn(
-                "h-6 w-6 rounded-full object-cover transition",
-                pathname === "/profile" ? "ring-2 ring-[#111111]" : "ring-2 ring-[#E8E8E8]"
-              )} />
-            ) : (
-              <div className={cn(
-                "flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold transition",
-                pathname === "/profile" ? "bg-[#111111] text-white" : "bg-[#E8E8E8] text-[#888888]"
-              )}>
-                {initial}
-              </div>
-            )}
-            <span className={cn(
-              "text-[10px] font-medium leading-none",
-              pathname === "/profile" ? "text-[#111111]" : "text-[#C0C0C0]"
-            )}>
-              Profile
-            </span>
-          </Link>
-        </div>
-      </nav>
-    </>
+        {/* Profile */}
+        <BottomNavItem href="/profile" label="Profile" pathname={pathname}>
+          <User className="h-5 w-5" />
+        </BottomNavItem>
+      </div>
+    </nav>
   );
 }
 
-function NavItem({
+function BottomNavItem({
   href, label, pathname, children,
 }: {
   href: string; label: string; pathname: string; children: React.ReactNode;
 }) {
   const active = pathname === href || pathname.startsWith(href + "/");
   return (
-    <Link href={href} className="flex flex-col items-center gap-1 py-3 px-1">
-      <span className={cn("transition", active ? "text-[#111111]" : "text-[#C0C0C0]")}>
+    <Link href={href} className="flex flex-col items-center gap-1 py-2 px-3 min-w-[3rem]">
+      <span className={cn("transition", active ? "text-black" : "text-gray-300")}>
         {children}
       </span>
       <span className={cn(
-        "text-[10px] font-medium leading-none",
-        active ? "text-[#111111]" : "text-[#C0C0C0]"
+        "text-[10px] leading-none",
+        active ? "font-bold text-black" : "font-medium text-gray-300"
       )}>
         {label}
       </span>

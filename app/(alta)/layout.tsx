@@ -1,12 +1,11 @@
 "use client";
 
-import { Navbar } from "@/components/app/navbar";
 import { useAuth } from "@/components/providers/auth-provider";
 import { AddModalProvider } from "@/lib/add-modal-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function AltaLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
 
@@ -16,18 +15,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (loading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white text-[#888888] text-sm">
+      <div className="flex min-h-screen items-center justify-center bg-white text-sm text-[#888888]">
         Loading...
       </div>
     );
   }
 
-  return (
-    <AddModalProvider>
-      <div className="min-h-screen bg-white">
-        <Navbar />
-        <main className="mx-auto max-w-5xl px-4 pt-4 pb-24">{children}</main>
-      </div>
-    </AddModalProvider>
-  );
+  return <AddModalProvider>{children}</AddModalProvider>;
 }
