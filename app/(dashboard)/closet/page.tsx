@@ -12,9 +12,8 @@ import { AddWishlistModal } from "@/components/wardrobe/add-wishlist-modal";
 import { Button } from "@/components/ui/button";
 import { useUserCollection } from "@/lib/hooks/use-user-collection";
 import { updateItem } from "@/lib/firestore";
-import { formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { Garment, WishlistItem } from "@/types";
-import { cn } from "@/lib/utils";
 
 const ALL = "All";
 type ViewMode = "grid2" | "grid3" | "list";

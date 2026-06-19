@@ -8,7 +8,7 @@ import { Modal } from "@/components/ui/modal";
 import { createItem, removeItem, updateItem } from "@/lib/firestore";
 import { useUserCollection } from "@/lib/hooks/use-user-collection";
 import { cn } from "@/lib/utils";
-import { Garment, Outfit, OutfitPlan } from "@/types";
+import { Garment, GarmentCategory, Outfit, OutfitPlan } from "@/types";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
