@@ -6,7 +6,6 @@ import {
   deleteDoc,
   doc,
   onSnapshot,
-  orderBy,
   query,
   setDoc,
   updateDoc,
@@ -17,7 +16,8 @@ import { db } from "@/lib/firebase";
 export type CollectionName = "garments" | "outfits" | "occasions" | "wearLogs" | "wishlist" | "profiles" | "outfitPlans";
 
 export function userCollection(name: CollectionName, userId: string) {
-  return query(collection(db, name), where("userId", "==", userId), orderBy("createdAt", "desc"));
+  // No orderBy here — avoids needing a composite index; every consumer sorts client-side.
+  return query(collection(db, name), where("userId", "==", userId));
 }
 
 export function subscribeToUserCollection<T>(

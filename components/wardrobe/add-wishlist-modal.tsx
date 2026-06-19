@@ -74,16 +74,49 @@ export function AddWishlistModal({ open, onClose }: { open: boolean; onClose: ()
     setOverlayOpen(true);
   }
 
-  function handleOverlaySelect(sel: ImageSelection) {
-    setExternalImageUrl(sel.imageUrl);
-    setError("");
-    setForm((c) => ({
-      ...c,
-      name:  c.name  || sel.name  || "",
-      price: c.price || sel.price || "",
-      url:   c.url   || sel.sourceUrl || "",
-    }));
+  async function handleOverlaySelect(selections: ImageSelection[]) {
     setOverlayOpen(false);
+
+    if (selections.length === 1) {
+      // Single: fill the form so the user can complete the details
+      const sel = selections[0];
+      setExternalImageUrl(sel.imageUrl);
+      setImageMode("url");
+      setError("");
+      setForm((c) => ({
+        ...c,
+        name:  c.name  || sel.name  || "",
+        price: c.price || sel.price || "",
+        url:   c.url   || sel.sourceUrl || "",
+      }));
+    } else {
+      // Multiple: batch-create all immediately
+      if (!user) return;
+      setLoading(true);
+      setError("");
+      try {
+        await Promise.all(
+          selections.map((sel) =>
+            createItem<Omit<WishlistItem, "id" | "createdAt" | "updatedAt">>("wishlist", {
+              userId:    user.uid,
+              name:      sel.name || form.category,
+              category:  form.category,
+              imageUrl:  sel.imageUrl,
+              url:       sel.sourceUrl || undefined,
+              price:     sel.price ? Number(sel.price) : undefined,
+              priority:  form.priority,
+              purchased: false,
+            })
+          )
+        );
+        onClose();
+        reset();
+      } catch {
+        setError("Some items could not be added. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
   }
 
   function clearImage() {

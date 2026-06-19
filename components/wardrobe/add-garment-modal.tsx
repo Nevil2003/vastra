@@ -172,16 +172,52 @@ export function AddGarmentModal({ open, onClose, editGarment }: Props) {
     setOverlayOpen(true);
   }
 
-  function handleOverlaySelect(sel: ImageSelection) {
-    setExternalImageUrl(sel.imageUrl);
-    setError("");
-    setForm((c) => ({
-      ...c,
-      name:  c.name  || sel.name  || "",
-      brand: c.brand || sel.brand || "",
-      price: c.price || sel.price || "",
-    }));
+  async function handleOverlaySelect(selections: ImageSelection[]) {
     setOverlayOpen(false);
+
+    if (selections.length === 1) {
+      // Single: fill the form so the user can complete the details
+      const sel = selections[0];
+      setExternalImageUrl(sel.imageUrl);
+      setImageMode("url");
+      setError("");
+      setForm((c) => ({
+        ...c,
+        name:  c.name  || sel.name  || "",
+        brand: c.brand || sel.brand || "",
+        price: c.price || sel.price || "",
+      }));
+    } else {
+      // Multiple: batch-create all immediately with auto-detected data
+      if (!user) return;
+      setLoading(true);
+      setError("");
+      try {
+        await Promise.all(
+          selections.map((sel) =>
+            createItem<Omit<Garment, "id" | "createdAt" | "updatedAt">>("garments", {
+              userId:          user.uid,
+              name:            sel.name || form.category,
+              category:        form.category,
+              imageUrl:        sel.imageUrl,
+              brand:           sel.brand || undefined,
+              price:           sel.price ? Number(sel.price) : undefined,
+              color:           "#111111",
+              colorName:       form.category,
+              wearCount:       0,
+              stitchingStatus: "not-needed",
+              measurements:    {},
+            })
+          )
+        );
+        onClose();
+        reset();
+      } catch {
+        setError("Some items could not be added. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
   }
 
   function clearImage() {

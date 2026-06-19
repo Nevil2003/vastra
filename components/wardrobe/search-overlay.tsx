@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Globe, Search, X } from "lucide-react";
+import { CheckCircle, Circle, Globe, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ImageResult } from "@/types";
 
-// Exported so modals can use it
 export interface ImageSelection {
   imageUrl: string;
   name?: string;
@@ -39,16 +38,18 @@ interface SearchOverlayProps {
   open: boolean;
   mode?: "search" | "url";
   onClose: () => void;
-  onSelect: (selection: ImageSelection) => void;
+  onSelect: (selections: ImageSelection[]) => void;
 }
 
 export function SearchOverlay({ open, mode = "search", onClose, onSelect }: SearchOverlayProps) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery]               = useState("");
   const [searchResults, setSearchResults] = useState<ImageResult[]>([]);
-  const [scrapeData, setScrapeData] = useState<ScrapeData | null>(null);
-  const [scrapedUrl, setScrapedUrl] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [scrapeData, setScrapeData]     = useState<ScrapeData | null>(null);
+  const [scrapedUrl, setScrapedUrl]     = useState("");
+  const [loading, setLoading]           = useState(false);
+  const [error, setError]               = useState("");
+  // key → ImageSelection for every selected result
+  const [selected, setSelected] = useState<Map<string, ImageSelection>>(new Map());
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isUrl = /^https?:\/\//i.test(query.trim());
@@ -60,6 +61,7 @@ export function SearchOverlay({ open, mode = "search", onClose, onSelect }: Sear
       setScrapeData(null);
       setScrapedUrl("");
       setError("");
+      setSelected(new Map());
       setTimeout(() => inputRef.current?.focus(), 60);
       document.body.style.overflow = "hidden";
     } else {
@@ -79,6 +81,7 @@ export function SearchOverlay({ open, mode = "search", onClose, onSelect }: Sear
     setError("");
     setSearchResults([]);
     setScrapeData(null);
+    setSelected(new Map());
     try {
       const res = await fetch(`/api/image-search?q=${encodeURIComponent(q)}`);
       const data = await res.json();
@@ -97,6 +100,7 @@ export function SearchOverlay({ open, mode = "search", onClose, onSelect }: Sear
     setError("");
     setSearchResults([]);
     setScrapeData(null);
+    setSelected(new Map());
     try {
       const res = await fetch(`/api/scrape?url=${encodeURIComponent(url)}`);
       const data = await res.json();
@@ -125,24 +129,19 @@ export function SearchOverlay({ open, mode = "search", onClose, onSelect }: Sear
     runSearch(s);
   }
 
-  function selectSearchResult(r: ImageResult) {
-    onSelect({
-      imageUrl: r.imageUrl,
-      name: r.title,
-      brand: r.brand,
-      sourceUrl: r.link || undefined,
+  function toggleResult(key: string, sel: ImageSelection) {
+    setSelected(prev => {
+      const next = new Map(prev);
+      if (next.has(key)) next.delete(key);
+      else next.set(key, sel);
+      return next;
     });
-    onClose();
   }
 
-  function selectScrapeImage(img: ScrapedImage) {
-    onSelect({
-      imageUrl: img.src,
-      name: scrapeData?.productName || scrapeData?.title || img.alt || undefined,
-      brand: scrapeData?.brand || scrapeData?.site || undefined,
-      price: scrapeData?.price || undefined,
-      sourceUrl: scrapedUrl || undefined,
-    });
+  function confirmSelection() {
+    const selections = Array.from(selected.values());
+    if (selections.length === 0) return;
+    onSelect(selections);
     onClose();
   }
 
@@ -173,7 +172,7 @@ export function SearchOverlay({ open, mode = "search", onClose, onSelect }: Sear
           />
           {query ? (
             <button
-              onClick={() => { setQuery(""); setSearchResults([]); setScrapeData(null); setError(""); }}
+              onClick={() => { setQuery(""); setSearchResults([]); setScrapeData(null); setError(""); setSelected(new Map()); }}
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#3A3A3A] text-white transition hover:bg-[#4A4A4A]"
             >
               <X className="h-4 w-4" />
@@ -194,12 +193,16 @@ export function SearchOverlay({ open, mode = "search", onClose, onSelect }: Sear
             {" "}to {isUrl ? "scan page for images" : "search"}
           </p>
         )}
+        {hasResults && (
+          <p className="mt-2 text-center text-xs text-[#555555]">
+            Tap images to select · tap again to deselect
+          </p>
+        )}
       </div>
 
       {/* Content */}
-      <div className="mx-auto w-full max-w-xl flex-1 overflow-y-auto px-4 pb-10">
+      <div className="mx-auto w-full max-w-xl flex-1 overflow-y-auto px-4 pb-32">
 
-        {/* Loading */}
         {loading && (
           <div className="flex flex-col items-center justify-center gap-3 py-16">
             <span className="h-7 w-7 animate-spin rounded-full border-2 border-white/20 border-t-white" />
@@ -209,7 +212,6 @@ export function SearchOverlay({ open, mode = "search", onClose, onSelect }: Sear
           </div>
         )}
 
-        {/* Suggestions */}
         {!query && !loading && (
           <div>
             {SUGGESTIONS.map((s, i) => (
@@ -229,7 +231,6 @@ export function SearchOverlay({ open, mode = "search", onClose, onSelect }: Sear
           </div>
         )}
 
-        {/* No key */}
         {error === "no-key" && (
           <div className="animate-rise py-10 text-center text-sm text-[#555555]">
             Add <span className="text-white">SERPER_API_KEY</span> or{" "}
@@ -240,27 +241,31 @@ export function SearchOverlay({ open, mode = "search", onClose, onSelect }: Sear
           <div className="animate-rise py-10 text-center text-sm text-red-400">{error}</div>
         )}
 
-        {/* Search results grid */}
+        {/* Search results */}
         {!loading && searchResults.length > 0 && (
           <div className="animate-rise grid grid-cols-2 gap-3">
-            {searchResults.map((r, i) => (
-              <ResultCard
-                key={`${r.imageUrl}-${i}`}
-                imageUrl={r.imageUrl}
-                title={r.title}
-                brand={r.brand}
-                site={r.site}
-                delay={i * 20}
-                onSelect={() => selectSearchResult(r)}
-              />
-            ))}
+            {searchResults.map((r, i) => {
+              const key = `${r.imageUrl}-${i}`;
+              const sel: ImageSelection = { imageUrl: r.imageUrl, name: r.title, brand: r.brand, sourceUrl: r.link || undefined };
+              return (
+                <ResultCard
+                  key={key}
+                  imageUrl={r.imageUrl}
+                  title={r.title}
+                  brand={r.brand}
+                  site={r.site}
+                  delay={i * 20}
+                  selected={selected.has(key)}
+                  onToggle={() => toggleResult(key, sel)}
+                />
+              );
+            })}
           </div>
         )}
 
         {/* Scraped images */}
         {!loading && scrapeData && scrapeData.images.length > 0 && (
           <div className="animate-rise">
-            {/* Page context bar */}
             <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <Globe className="h-4 w-4 text-[#555555]" />
               <span className="text-sm text-[#888888]">{scrapeData.site}</span>
@@ -276,28 +281,53 @@ export function SearchOverlay({ open, mode = "search", onClose, onSelect }: Sear
               )}
             </div>
             <div className="grid grid-cols-2 gap-3">
-              {scrapeData.images.map((img, i) => (
-                <ResultCard
-                  key={`${img.src}-${i}`}
-                  imageUrl={img.src}
-                  title={img.alt || scrapeData.productName || scrapeData.title}
-                  brand={scrapeData.brand || scrapeData.site}
-                  site={scrapeData.site}
-                  delay={i * 20}
-                  onSelect={() => selectScrapeImage(img)}
-                />
-              ))}
+              {scrapeData.images.map((img, i) => {
+                const key = `${img.src}-${i}`;
+                const sel: ImageSelection = {
+                  imageUrl: img.src,
+                  name: scrapeData.productName || scrapeData.title || img.alt || undefined,
+                  brand: scrapeData.brand || scrapeData.site || undefined,
+                  price: scrapeData.price || undefined,
+                  sourceUrl: scrapedUrl || undefined,
+                };
+                return (
+                  <ResultCard
+                    key={key}
+                    imageUrl={img.src}
+                    title={img.alt || scrapeData.productName || scrapeData.title}
+                    brand={scrapeData.brand || scrapeData.site}
+                    site={scrapeData.site}
+                    delay={i * 20}
+                    selected={selected.has(key)}
+                    onToggle={() => toggleResult(key, sel)}
+                  />
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* No results */}
         {!loading && !error && query.trim() && !hasResults && (
           <div className="animate-rise py-10 text-center text-sm text-[#555555]">
             No images found — try different keywords
           </div>
         )}
       </div>
+
+      {/* Sticky confirm bar */}
+      {selected.size > 0 && (
+        <div className="absolute bottom-0 inset-x-0 bg-[#1A1A1A] border-t border-white/10 px-4 py-4 flex items-center justify-between gap-4">
+          <span className="text-sm text-[#888888]">
+            {selected.size} item{selected.size !== 1 ? "s" : ""} selected
+          </span>
+          <button
+            onClick={confirmSelection}
+            className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-black transition hover:bg-white/90 active:scale-95"
+          >
+            Add {selected.size} item{selected.size !== 1 ? "s" : ""} →
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -305,23 +335,27 @@ export function SearchOverlay({ open, mode = "search", onClose, onSelect }: Sear
 // ─── Result card ──────────────────────────────────────────────────────────────
 
 function ResultCard({
-  imageUrl, title, brand, site, delay, onSelect,
+  imageUrl, title, brand, site, delay, selected, onToggle,
 }: {
   imageUrl: string;
   title: string;
   brand: string;
   site: string;
   delay: number;
-  onSelect: () => void;
+  selected: boolean;
+  onToggle: () => void;
 }) {
   const [broken, setBroken] = useState(false);
   if (broken) return null;
 
   return (
     <button
-      onClick={onSelect}
+      onClick={onToggle}
       style={{ animationDelay: `${delay}ms` }}
-      className="animate-rise group flex flex-col overflow-hidden rounded-2xl bg-[#1E1E1E] text-left transition-all duration-200 hover:scale-[1.02] hover:ring-2 hover:ring-white/20 active:scale-[0.99]"
+      className={cn(
+        "animate-rise group flex flex-col overflow-hidden rounded-2xl bg-[#1E1E1E] text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.99]",
+        selected ? "ring-2 ring-white" : "hover:ring-2 hover:ring-white/20"
+      )}
     >
       <div className="relative aspect-square w-full overflow-hidden bg-[#2A2A2A]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -331,6 +365,16 @@ function ResultCard({
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.05]"
           onError={() => setBroken(true)}
         />
+        {/* Selection indicator */}
+        <div className="absolute top-2 right-2">
+          {selected
+            ? <CheckCircle className="h-5 w-5 text-white drop-shadow" />
+            : <Circle className="h-5 w-5 text-white/40 group-hover:text-white/70 transition-colors" />
+          }
+        </div>
+        {selected && (
+          <div className="absolute inset-0 bg-white/10" />
+        )}
       </div>
       <div className="px-2.5 py-2.5">
         {title && (
