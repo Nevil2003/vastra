@@ -75,7 +75,7 @@ function detectCategory(name: string): GarmentCategory | null {
   if (/necklace|earring|bracelet|ring|watch|purse|handbag|scarf|belt|cap|hat|sunglass|dupatta/.test(s)) return "Accessory";
   if (/bag/.test(s))                                                                 return "Accessory";
   if (/fabric|cloth|lace/.test(s))                                                   return "Fabric";
-  if (/lipstick|makeup|perfume|serum|moisturizer/.test(s))                           return "Beauty";
+  if (/lipstick|lip\s*(balm|gloss|liner)|makeup|foundation|concealer|primer|blush|bronzer|highlighter|contour|mascara|eyeliner|eyeshadow|kajal|kohl|bindi|perfume|deodorant|fragrance|serum|moisturizer|sunscreen|lotion|cream|toner|cleanser|face\s*wash|shampoo|conditioner|hair\s*(oil|mask|spray|serum)|nail\s*(polish|paint)|beauty/.test(s)) return "Beauty";
   return null;
 }
 

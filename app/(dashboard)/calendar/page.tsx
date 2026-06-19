@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, MapPin, Plus, Search, Shirt, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Check, ChevronLeft, ChevronRight, MapPin, Search, Shirt, X } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -29,22 +29,30 @@ function TripPlanModal({
   garments: Garment[]; existingPlan?: OutfitPlan;
 }) {
   const { user } = useAuth();
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    new Set(existingPlan?.garmentIds ?? [])
-  );
-  const [filterCat, setFilterCat] = useState<GarmentCategory | "All">("All");
-  const [search, setSearch]       = useState("");
-  const [occasion, setOccasion]   = useState(existingPlan?.occasion ?? "");
-  const [notes, setNotes]         = useState(existingPlan?.notes ?? "");
-  const [loading, setLoading]     = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [filterCat, setFilterCat]     = useState<GarmentCategory | "All">("All");
+  const [search, setSearch]           = useState("");
+  const [occasion, setOccasion]       = useState("");
+  const [notes, setNotes]             = useState("");
+  const [loading, setLoading]         = useState(false);
+
+  // Reset state every time the modal opens so stale selections don't persist
+  useEffect(() => {
+    if (!open) return;
+    setSelectedIds(new Set(existingPlan?.garmentIds ?? []));
+    setOccasion(existingPlan?.occasion ?? "");
+    setNotes(existingPlan?.notes ?? "");
+    setFilterCat("All");
+    setSearch("");
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const categories = ["All", ...Array.from(new Set(garments.map((g) => g.category)))] as (GarmentCategory | "All")[];
 
   const visible = garments.filter((g) => {
     const matchCat = filterCat === "All" || g.category === filterCat;
     const matchQ   = !search || g.name.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchQ;
   });
-
-  const categories = ["All", ...Array.from(new Set(garments.map((g) => g.category)))] as (GarmentCategory | "All")[];
 
   function toggle(id: string) {
     setSelectedIds((prev) => {
@@ -62,8 +70,8 @@ function TripPlanModal({
         userId:     user.uid,
         date,
         garmentIds: Array.from(selectedIds),
-        occasion:   occasion || "Trip",
-        notes:      notes || undefined,
+        occasion:   occasion.trim() || "Trip",
+        notes:      notes.trim() || undefined,
         worn:       existingPlan?.worn ?? false,
       };
       if (existingPlan) await updateItem("outfitPlans", existingPlan.id, data);
@@ -112,20 +120,20 @@ function TripPlanModal({
 
         {/* Garment grid */}
         {garments.length === 0 ? (
-          <p className="text-sm text-center text-[#AAAAAA] py-6">No items in your closet yet</p>
+          <p className="py-6 text-center text-sm text-[#AAAAAA]">No items in your closet yet</p>
         ) : (
           <div className="max-h-72 overflow-y-auto">
             <div className="grid grid-cols-3 gap-2">
               {visible.map((g) => {
-                const selected = selectedIds.has(g.id);
+                const sel = selectedIds.has(g.id);
                 return (
                   <button
                     key={g.id}
                     type="button"
                     onClick={() => toggle(g.id)}
                     className={cn(
-                      "relative flex flex-col rounded-xl overflow-hidden border-2 transition-all text-left",
-                      selected ? "border-[#111111] scale-[1.02] shadow-sm" : "border-transparent hover:border-[#DDDDDD]"
+                      "relative flex flex-col overflow-hidden rounded-xl border-2 text-left transition-all",
+                      sel ? "border-[#111111] shadow-sm scale-[1.02]" : "border-transparent hover:border-[#DDDDDD]"
                     )}
                   >
                     <div className="aspect-square bg-[#F5F5F5]">
@@ -138,9 +146,9 @@ function TripPlanModal({
                         </div>
                       )}
                     </div>
-                    <p className="truncate px-1.5 py-1 text-[10px] text-[#555555] bg-white">{g.name}</p>
-                    {selected && (
-                      <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#111111] flex items-center justify-center">
+                    <p className="truncate bg-white px-1.5 py-1 text-[10px] text-[#555555]">{g.name}</p>
+                    {sel && (
+                      <div className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#111111]">
                         <Check className="h-3 w-3 text-white" />
                       </div>
                     )}
@@ -148,19 +156,18 @@ function TripPlanModal({
                 );
               })}
               {visible.length === 0 && (
-                <p className="col-span-3 text-center text-sm text-[#AAAAAA] py-6">No items match</p>
+                <p className="col-span-3 py-6 text-center text-sm text-[#AAAAAA]">No items match</p>
               )}
             </div>
           </div>
         )}
 
         {selectedIds.size > 0 && (
-          <p className="text-xs text-center text-[#888888]">
+          <p className="text-center text-xs text-[#888888]">
             {selectedIds.size} item{selectedIds.size !== 1 ? "s" : ""} selected
           </p>
         )}
 
-        {/* Occasion + notes */}
         <input
           className="w-full rounded-xl border border-[#E8E8E8] bg-white px-4 py-2.5 text-sm placeholder:text-[#AAAAAA] outline-none focus:border-[#111111] transition"
           placeholder="Occasion / destination (optional)"
@@ -175,7 +182,9 @@ function TripPlanModal({
         />
 
         <Button className="w-full" onClick={save} isLoading={loading} disabled={selectedIds.size === 0}>
-          {existingPlan ? "Update trip pack" : `Save ${selectedIds.size > 0 ? `(${selectedIds.size} items)` : "trip"}`}
+          {existingPlan
+            ? `Update (${selectedIds.size} items)`
+            : `Save${selectedIds.size > 0 ? ` (${selectedIds.size} items)` : " trip"}`}
         </Button>
 
         {existingPlan && (
@@ -191,148 +200,14 @@ function TripPlanModal({
   );
 }
 
-// ─── Plan Modal ───────────────────────────────────────────────────────────────
-
-function PlanModal({
-  open, onClose, date, outfits, garments, existingPlan,
-}: {
-  open: boolean; onClose: () => void; date: string;
-  outfits: Outfit[]; garments: Garment[]; existingPlan?: OutfitPlan;
-}) {
-  const { user } = useAuth();
-  const [selectedOutfit, setSelectedOutfit] = useState(existingPlan?.outfitId ?? "");
-  const [occasion, setOccasion]             = useState(existingPlan?.occasion ?? "");
-  const [notes, setNotes]                   = useState(existingPlan?.notes ?? "");
-  const [loading, setLoading]               = useState(false);
-
-  const garmentMap = useMemo(() => new Map(garments.map((g) => [g.id, g])), [garments]);
-
-  async function save() {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const chosenOutfit = outfits.find((o) => o.id === selectedOutfit);
-      const data = {
-        userId: user.uid, date,
-        outfitId:   selectedOutfit || undefined,
-        garmentIds: chosenOutfit?.garmentIds ?? [],
-        occasion:   occasion || undefined,
-        notes:      notes || undefined,
-        worn:       existingPlan?.worn ?? false,
-      };
-      if (existingPlan) await updateItem("outfitPlans", existingPlan.id, data);
-      else               await createItem("outfitPlans", data);
-      onClose();
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function markWorn() {
-    if (!existingPlan || !user) return;
-    setLoading(true);
-    const nowWorn = !existingPlan.worn;
-    await updateItem("outfitPlans", existingPlan.id, { worn: nowWorn });
-    if (nowWorn) {
-      const today = ymd(new Date());
-      for (const gId of existingPlan.garmentIds) {
-        const g = garmentMap.get(gId);
-        if (g) await updateItem("garments", gId, { wearCount: (g.wearCount || 0) + 1, lastWorn: today });
-      }
-      if (existingPlan.outfitId) {
-        const o = outfits.find((x) => x.id === existingPlan.outfitId);
-        if (o) await updateItem("outfits", o.id, { wornCount: (o.wornCount || 0) + 1, lastWorn: today });
-      }
-    }
-    setLoading(false);
-    onClose();
-  }
-
-  const displayDate = new Date(date + "T12:00:00")
-    .toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
-
-  return (
-    <Modal open={open} onClose={onClose} title={displayDate}>
-      <div className="space-y-4">
-        <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#888888]">Outfit</p>
-          {outfits.length === 0 ? (
-            <p className="text-sm text-[#AAAAAA]">No outfits yet — create one first</p>
-          ) : (
-            <div className="max-h-52 space-y-1.5 overflow-y-auto">
-              <button type="button" onClick={() => setSelectedOutfit("")}
-                className={cn("flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition text-left",
-                  !selectedOutfit ? "border-[#111111] bg-[#111111] text-white" : "border-[#EEEEEE] hover:border-[#CCCCCC]"
-                )}>
-                <Shirt className="h-4 w-4 shrink-0" />
-                <span>No outfit / just a note</span>
-              </button>
-              {outfits.map((o) => {
-                const imgs = o.garmentIds.map((id) => garmentMap.get(id)).filter(Boolean).slice(0, 2);
-                return (
-                  <button key={o.id} type="button" onClick={() => setSelectedOutfit(o.id)}
-                    className={cn("flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition text-left",
-                      selectedOutfit === o.id ? "border-[#111111] bg-[#F8F8F8]" : "border-[#EEEEEE] hover:border-[#CCCCCC]"
-                    )}>
-                    <div className="flex shrink-0 -space-x-1">
-                      {imgs.map((g, i) => (
-                        <div key={i} className="h-8 w-8 overflow-hidden rounded-lg border-2 border-white bg-[#F0F0F0]">
-                          {g?.imageUrl
-                            ? <img src={g.imageUrl} alt="" className="h-full w-full object-cover" />  // eslint-disable-line @next/next/no-img-element
-                            : <div className="flex h-full items-center justify-center"><div className="h-3 w-3 rounded-full" style={{ background: g?.color ?? "#ccc" }} /></div>
-                          }
-                        </div>
-                      ))}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-[#111111]">{o.name}</p>
-                      {o.occasion && <p className="text-[10px] text-[#AAAAAA]">{o.occasion}</p>}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        <input className="w-full rounded-xl border border-[#E8E8E8] bg-white px-4 py-2.5 text-sm placeholder:text-[#AAAAAA] outline-none focus:border-[#111111] transition"
-          placeholder="Occasion (optional)" value={occasion} onChange={(e) => setOccasion(e.target.value)} />
-
-        <input className="w-full rounded-xl border border-[#E8E8E8] bg-white px-4 py-2.5 text-sm placeholder:text-[#AAAAAA] outline-none focus:border-[#111111] transition"
-          placeholder="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} />
-
-        <div className="flex gap-2">
-          <Button className="flex-1" onClick={save} isLoading={loading}>
-            {existingPlan ? "Update" : "Save plan"}
-          </Button>
-          {existingPlan && (
-            <Button variant="outline" onClick={markWorn} isLoading={loading}
-              className={cn("flex-1", existingPlan.worn && "border-green-200 bg-green-50 text-green-700")}>
-              {existingPlan.worn ? "Worn ✓" : "Mark worn"}
-            </Button>
-          )}
-        </div>
-
-        {existingPlan && (
-          <button onClick={async () => { await removeItem("outfitPlans", existingPlan.id); onClose(); }}
-            className="flex w-full items-center justify-center gap-1.5 py-2 text-xs text-red-400 transition hover:text-red-600">
-            <X className="h-3.5 w-3.5" /> Remove plan
-          </button>
-        )}
-      </div>
-    </Modal>
-  );
-}
-
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function CalendarPage() {
   const now  = new Date();
-  const [year, setYear]           = useState(now.getFullYear());
-  const [month, setMonth]         = useState(now.getMonth());
+  const [year, setYear]         = useState(now.getFullYear());
+  const [month, setMonth]       = useState(now.getMonth());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [planModalOpen, setPlanModalOpen]     = useState(false);
-  const [tripModalOpen, setTripModalOpen]     = useState(false);
+  const [tripModalOpen, setTripModalOpen] = useState(false);
 
   const { items: plans }    = useUserCollection<OutfitPlan>("outfitPlans");
   const { items: outfits }  = useUserCollection<Outfit>("outfits");
@@ -364,7 +239,7 @@ export default function CalendarPage() {
   const today    = ymd(now);
 
   const selectedDayPlans = selectedDate ? (plansByDate.get(selectedDate) ?? []) : [];
-  const existingPlan = selectedDayPlans[0];
+  const existingTripPlan = selectedDayPlans.find((p) => p.occasion === "Trip" || !p.outfitId);
 
   return (
     <div className="space-y-5">
@@ -403,7 +278,8 @@ export default function CalendarPage() {
             const thumbImg   = dayPlans[0]?.outfitId
               ? outfitMap.get(dayPlans[0].outfitId)?.garmentIds
                 .map((id) => garmentMap.get(id)).find((g) => g?.imageUrl)?.imageUrl
-              : undefined;
+              : dayPlans[0]?.garmentIds
+                .map((id) => garmentMap.get(id)).find((g) => g?.imageUrl)?.imageUrl;
 
             return (
               <button key={day} type="button" onClick={() => setSelectedDate(isSelected ? null : dateStr)}
@@ -466,8 +342,8 @@ export default function CalendarPage() {
                       ))}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[#111111]">{outfit?.name ?? plan.occasion ?? "Outfit plan"}</p>
-                      {plan.occasion && <p className="text-xs text-[#AAAAAA]">{plan.occasion}</p>}
+                      <p className="truncate text-sm font-semibold text-[#111111]">{outfit?.name ?? plan.occasion ?? "Trip plan"}</p>
+                      {plan.occasion && outfit && <p className="text-xs text-[#AAAAAA]">{plan.occasion}</p>}
                     </div>
                     {plan.worn && <span className="shrink-0 text-xs font-medium text-green-600">Worn ✓</span>}
                   </div>
@@ -478,17 +354,10 @@ export default function CalendarPage() {
             <p className="mb-3 text-sm text-[#AAAAAA]">Nothing planned for this day.</p>
           )}
 
-          {/* Action buttons */}
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <Button className="gap-1.5" onClick={() => setPlanModalOpen(true)}>
-              <Plus className="h-4 w-4" />
-              {existingPlan ? "Edit plan" : "Plan outfit"}
-            </Button>
-            <Button variant="outline" className="gap-1.5" onClick={() => setTripModalOpen(true)}>
-              <MapPin className="h-4 w-4" />
-              Plan trip
-            </Button>
-          </div>
+          <Button className="mt-3 w-full gap-1.5" onClick={() => setTripModalOpen(true)}>
+            <MapPin className="h-4 w-4" />
+            {existingTripPlan ? "Edit trip" : "Plan trip"}
+          </Button>
         </div>
       )}
 
@@ -496,7 +365,7 @@ export default function CalendarPage() {
       <div>
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#888888]">Upcoming</p>
         {plans.filter((p) => p.date >= today && !p.worn).length === 0 ? (
-          <p className="text-sm text-[#AAAAAA]">No upcoming outfit plans</p>
+          <p className="text-sm text-[#AAAAAA]">No upcoming plans</p>
         ) : (
           <div className="space-y-2">
             {plans.filter((p) => p.date >= today && !p.worn)
@@ -524,7 +393,7 @@ export default function CalendarPage() {
                       ))}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[#111111]">{outfit?.name ?? plan.occasion ?? "Outfit plan"}</p>
+                      <p className="truncate text-sm font-semibold text-[#111111]">{outfit?.name ?? plan.occasion ?? "Trip plan"}</p>
                       <p className="text-xs text-[#AAAAAA]">
                         {new Date(plan.date + "T12:00:00").toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
                       </p>
@@ -538,18 +407,6 @@ export default function CalendarPage() {
         )}
       </div>
 
-      {/* Plan outfit modal */}
-      {selectedDate && (
-        <PlanModal
-          open={planModalOpen}
-          onClose={() => setPlanModalOpen(false)}
-          date={selectedDate}
-          outfits={outfits}
-          garments={garments}
-          existingPlan={existingPlan}
-        />
-      )}
-
       {/* Plan trip modal */}
       {selectedDate && (
         <TripPlanModal
@@ -557,7 +414,7 @@ export default function CalendarPage() {
           onClose={() => setTripModalOpen(false)}
           date={selectedDate}
           garments={garments}
-          existingPlan={existingPlan?.occasion === "Trip" ? existingPlan : undefined}
+          existingPlan={existingTripPlan}
         />
       )}
     </div>
