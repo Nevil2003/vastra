@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, ElementType, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, ElementType, FormEvent, useEffect, useRef, useState } from "react";
 import {
   Briefcase, Camera, Crown, Gem, Layers, Link2,
   Palette, Scissors, Search, Shirt, Sparkles, Star, Wind, X,
@@ -56,6 +56,28 @@ const TAG_OPTS: { value: GarmentTag; label: string }[] = [
   { value: "needs-alteration", label: "Needs alteration" },
   { value: "sentimental",      label: "Sentimental" },
 ];
+
+// ─── Category auto-detection ──────────────────────────────────────────────────
+
+function detectCategory(name: string): GarmentCategory | null {
+  const s = name.toLowerCase();
+  if (/saree|sari/.test(s))                                                         return "Saree";
+  if (/lehenga/.test(s))                                                             return "Lehenga";
+  if (/kurta|kurti|salwar|churidar|kameez/.test(s))                                  return "Kurta";
+  if (/sherwani|tuxedo/.test(s))                                                     return "Suit";
+  if (/blazer/.test(s))                                                              return "Suit";
+  if (/dress|gown|frock|midi|maxi/.test(s))                                          return "Dress";
+  if (/shoe|boot|loafer|heel|sandal|sneaker|oxford|mule|pump|slipper|chappal|flip/.test(s)) return "Shoes";
+  if (/jacket|coat|cardigan|hoodie/.test(s))                                         return "Outerwear";
+  if (/jeans|trouser|pant|skirt|shorts|legging|palazzo|chino|dhoti/.test(s))        return "Bottom";
+  if (/shirt|blouse|crop|tank/.test(s))                                              return "Top";
+  if (/tee|t-shirt/.test(s))                                                         return "Top";
+  if (/necklace|earring|bracelet|ring|watch|purse|handbag|scarf|belt|cap|hat|sunglass|dupatta/.test(s)) return "Accessory";
+  if (/bag/.test(s))                                                                 return "Accessory";
+  if (/fabric|cloth|lace/.test(s))                                                   return "Fabric";
+  if (/lipstick|makeup|perfume|serum|moisturizer/.test(s))                           return "Beauty";
+  return null;
+}
 
 type ImageMode = "photo" | "search" | "url";
 
@@ -118,6 +140,7 @@ export function AddGarmentModal({ open, onClose, editGarment }: Props) {
 
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState("");
+  const userPickedCategory = useRef(false);
   const [imageMode, setImageMode]   = useState<ImageMode>("photo");
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [overlayMode, setOverlayMode] = useState<"search" | "url">("search");
@@ -129,6 +152,17 @@ export function AddGarmentModal({ open, onClose, editGarment }: Props) {
   const [form, setForm]               = useState<FormState>(BLANK_FORM);
   const [weatherTags, setWeatherTags] = useState<WeatherTag[]>([]);
   const [tags, setTags]               = useState<GarmentTag[]>([]);
+
+  // Auto-detect category from name (debounced, only when user hasn't manually chosen)
+  useEffect(() => {
+    if (isEdit || userPickedCategory.current || !form.name) return;
+    const t = setTimeout(() => {
+      const detected = detectCategory(form.name);
+      if (detected) setField("category", detected);
+    }, 400);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.name]);
 
   // Reset / pre-fill when modal opens or switches edit target
   useEffect(() => {
@@ -154,6 +188,7 @@ export function AddGarmentModal({ open, onClose, editGarment }: Props) {
     setFile(null);
     setFilePreview(null);
     setError("");
+    userPickedCategory.current = false;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editGarment?.id]);
 
@@ -181,12 +216,17 @@ export function AddGarmentModal({ open, onClose, editGarment }: Props) {
       setExternalImageUrl(sel.imageUrl);
       setImageMode("url");
       setError("");
+      const newName = sel.name || "";
       setForm((c) => ({
         ...c,
-        name:  c.name  || sel.name  || "",
+        name:  c.name  || newName,
         brand: c.brand || sel.brand || "",
         price: c.price || sel.price || "",
       }));
+      if (!userPickedCategory.current && newName) {
+        const detected = detectCategory(newName);
+        if (detected) setField("category", detected);
+      }
     } else {
       // Multiple: batch-create all immediately with auto-detected data
       if (!user) return;
@@ -330,7 +370,7 @@ export function AddGarmentModal({ open, onClose, editGarment }: Props) {
                   <button
                     key={name}
                     type="button"
-                    onClick={() => setField("category", name)}
+                    onClick={() => { userPickedCategory.current = true; setField("category", name); }}
                     style={{ animationDelay: `${i * 20}ms` }}
                     className={cn(
                       "animate-rise flex flex-col items-center gap-1.5 rounded-xl px-1 py-3 text-[10px] font-medium leading-none transition-all duration-200",
