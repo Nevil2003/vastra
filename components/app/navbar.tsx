@@ -28,8 +28,12 @@ export function Navbar() {
       {/* ── Top header ───────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 w-full border-b border-[#E8E8E8] bg-white/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-          <Link href="/closet" className="text-xl font-bold tracking-tight text-[#111111]">
-            vastra
+          <Link href="/closet" className="flex items-center">
+            <img
+              src="/local-lookbook-logo.png"
+              alt="Local Lookbook"
+              className="h-9 w-auto object-contain brightness-0"
+            />
           </Link>
 
           {/* Desktop pill tabs */}

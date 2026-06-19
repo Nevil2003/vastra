@@ -73,7 +73,7 @@ export default function LoginPage() {
       </Button>
 
       <p className="text-center text-sm text-[#888888]">
-        New to vastra?{" "}
+        New to Local Lookbook?{" "}
         <Link href="/signup" className="font-semibold text-[#111111] hover:underline">
           Create an account
         </Link>

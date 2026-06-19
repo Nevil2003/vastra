@@ -3,10 +3,10 @@ import { AuthProvider } from "@/components/providers/auth-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Vastra - Wardrobe, Outfits & Stitching",
+  title: "Local Lookbook - Wardrobe, Outfits & Stitching",
   description: "A clean wardrobe operating system for outfits, occasions, tailoring, measurements, wear logs, and wishlist planning.",
   keywords: ["digital closet", "outfit planner", "wardrobe", "tailoring", "stitching", "India"],
-  authors: [{ name: "Vastra" }],
+  authors: [{ name: "Local Lookbook" }],
 };
 
 export const viewport: Viewport = {

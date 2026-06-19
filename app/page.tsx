@@ -14,7 +14,11 @@ export default function LandingPage() {
       {/* Header */}
       <header className="border-b border-[#E8E8E8]">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-          <span className="text-xl font-bold tracking-tight">vastra</span>
+          <img
+            src="/local-lookbook-logo.png"
+            alt="Local Lookbook"
+            className="h-9 w-auto object-contain brightness-0"
+          />
           <div className="flex items-center gap-3">
             <Link href="/login" className="text-sm font-medium text-[#888888] hover:text-[#111111] transition-colors">
               Sign in
@@ -64,7 +68,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-[#E8E8E8] py-8">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 text-sm text-[#AAAAAA]">
-          <span className="font-medium text-[#111111]">vastra</span>
+          <span className="font-medium text-[#111111]">Local Lookbook</span>
           <span>Your personal wardrobe, always with you.</span>
         </div>
       </footer>
