@@ -23,7 +23,7 @@ export default function SignupPage() {
     try {
       const credential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(credential.user, { displayName: name });
-      router.push("/closet");
+      router.push("/today");
     } catch {
       setError("Could not create your account. Try a stronger password or another email.");
     } finally {
@@ -36,7 +36,7 @@ export default function SignupPage() {
     setError("");
     try {
       await signInWithPopup(auth, googleProvider);
-      router.push("/closet");
+      router.push("/today");
     } catch {
       setError("Google sign up was not completed.");
     } finally {
@@ -62,7 +62,7 @@ export default function SignupPage() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-[#111111]">Password</label>
-          <Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Input type="password" required autoComplete="new-password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         {error && <p className="text-sm text-red-500">{error}</p>}
         <Button type="submit" className="w-full" isLoading={loading}>Get started</Button>

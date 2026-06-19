@@ -21,7 +21,7 @@ export default function LoginPage() {
     setError("");
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push("/closet");
+      router.push("/today");
     } catch {
       setError("Incorrect email or password.");
     } finally {
@@ -34,9 +34,14 @@ export default function LoginPage() {
     setError("");
     try {
       await signInWithPopup(auth, googleProvider);
-      router.push("/closet");
-    } catch {
-      setError("Google sign in was not completed.");
+      router.push("/today");
+    } catch (err: unknown) {
+      const code = (err as { code?: string }).code;
+      if (code === "auth/popup-blocked" || code === "auth/unauthorized-domain") {
+        setError("Google sign-in is not authorized for this domain. Contact support.");
+      } else if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") {
+        setError("Google sign-in failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -56,7 +61,7 @@ export default function LoginPage() {
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-[#111111]">Password</label>
-          <Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Input type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         {error && <p className="text-sm text-red-500">{error}</p>}
         <Button type="submit" className="w-full" isLoading={loading}>Sign in</Button>
