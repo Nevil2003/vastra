@@ -7,21 +7,11 @@ import { useAddModal } from "@/lib/add-modal-context";
 import { useUserCollection } from "@/lib/hooks/use-user-collection";
 import type { Garment } from "@/types";
 import {
-  HelpCircle,
-  Bell,
-  User,
-  Home,
-  Shirt,
-  Plus,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Cloud,
-  CloudSun,
-  Sun,
+  HelpCircle, Bell, User, Home, Shirt, Plus, Search,
+  ChevronLeft, ChevronRight, Cloud, CloudSun, Sun,
 } from "lucide-react";
 
-// ── Weather ──────────────────────────────────────────────────────────────────
+// ── Weather ───────────────────────────────────────────────────────────────────
 
 type Weather = { temp: number; high: number; low: number; code: number };
 
@@ -64,54 +54,33 @@ function WeatherIcon({ code, className }: { code: number; className?: string }) 
   return <Cloud className={className} />;
 }
 
-// ── Outfit generation ─────────────────────────────────────────────────────────
+// ── Outfit generation – 4 fixed category slots ────────────────────────────────
 
-const TOP_CATS    = ["Top", "Kurta"] as const;
-const FULL_CATS   = ["Dress", "Saree", "Lehenga", "Suit"] as const;
-const BOTTOM_CATS = ["Bottom"] as const;
-const SHOE_CATS   = ["Shoes"] as const;
-const OUTER_CATS  = ["Outerwear"] as const;
-const ACC_CATS    = ["Accessory"] as const;
+type SlotDef   = { key: string; label: string; cats: string[] };
+type SlotFill  = SlotDef & { item: Garment | null };
+type OutfitSet = SlotFill[];
+
+const SLOT_DEFS: SlotDef[] = [
+  { key: "top",       label: "Top",       cats: ["Top", "Kurta", "Dress", "Saree", "Lehenga", "Suit"] },
+  { key: "bottom",    label: "Bottom",    cats: ["Bottom"] },
+  { key: "shoes",     label: "Shoes",     cats: ["Shoes"] },
+  { key: "accessory", label: "Accessory", cats: ["Accessory"] },
+];
 
 function pick<T>(arr: T[]): T | null {
   return arr.length ? arr[Math.floor(Math.random() * arr.length)] : null;
 }
 
-function generateOutfits(garments: Garment[], count = 5): Garment[][] {
-  const by = (cats: readonly string[]) => garments.filter(g => cats.includes(g.category));
-  const tops      = by(TOP_CATS);
-  const fulls     = by(FULL_CATS);
-  const bottoms   = by(BOTTOM_CATS);
-  const shoes     = by(SHOE_CATS);
-  const outerwear = by(OUTER_CATS);
-  const accessory = by(ACC_CATS);
+function buildOutfit(garments: Garment[]): OutfitSet {
+  return SLOT_DEFS.map((def) => ({
+    ...def,
+    item: pick(garments.filter((g) => def.cats.includes(g.category))),
+  }));
+}
 
-  const results: Garment[][] = [];
-  const attempts = count * 4;
-
-  for (let i = 0; i < attempts && results.length < count; i++) {
-    const outfit: Garment[] = [];
-    const useFullPiece = fulls.length > 0 && (tops.length === 0 || Math.random() > 0.5);
-
-    if (useFullPiece) {
-      const f = pick(fulls);
-      if (f) outfit.push(f);
-    } else {
-      const t = pick(tops);
-      if (t) outfit.push(t);
-      const b = pick(bottoms);
-      if (b) outfit.push(b);
-    }
-
-    const s = pick(shoes);
-    if (s) outfit.push(s);
-    if (Math.random() > 0.6) { const o = pick(outerwear); if (o) outfit.push(o); }
-    if (Math.random() > 0.5) { const a = pick(accessory); if (a) outfit.push(a); }
-
-    if (outfit.length > 0) results.push(outfit);
-  }
-
-  return results;
+function generateOutfits(garments: Garment[], count = 5): OutfitSet[] {
+  if (garments.length === 0) return [];
+  return Array.from({ length: count }, () => buildOutfit(garments));
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -136,31 +105,25 @@ export default function TodayPage() {
   const bellRef = useRef<HTMLDivElement>(null);
 
   const firstName = user?.displayName?.split(" ")[0] ?? "there";
-  const today    = new Date();
-  const dayNum   = today.getDate();
-  const dayShort = today.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
-  const fullDate = today.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+  const today     = new Date();
+  const dayNum    = today.getDate();
+  const dayShort  = today.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
+  const fullDate  = today.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
 
-  // Regenerate outfits whenever the wardrobe changes
   const outfits = useMemo(() => generateOutfits(garments), [garments]);
 
-  // Keep index in bounds when outfit list changes
-  useEffect(() => {
-    setOutfitIdx(0);
-  }, [outfits.length]);
+  useEffect(() => { setOutfitIdx(0); }, [outfits.length]);
 
-  // Close notification panel on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (bellRef.current && !bellRef.current.contains(e.target as Node)) {
+      if (bellRef.current && !bellRef.current.contains(e.target as Node))
         setShowNotifications(false);
-      }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const currentOutfit = outfits[outfitIdx] ?? [];
+  const currentOutfit: OutfitSet = outfits[outfitIdx] ?? SLOT_DEFS.map((d) => ({ ...d, item: null }));
   const hasOutfits = outfits.length > 0;
 
   return (
@@ -170,10 +133,8 @@ export default function TodayPage() {
       <header className="sticky top-0 z-40 bg-white border-b border-gray-100">
         <div className="flex items-center justify-between px-4 h-14 max-w-5xl mx-auto">
 
-          <Link
-            href="/calendar"
-            className="flex flex-col items-center justify-center w-10 h-10 rounded-xl border border-gray-200 bg-gray-50 gap-0.5 hover:bg-gray-100 transition-colors"
-          >
+          <Link href="/calendar"
+            className="flex flex-col items-center justify-center w-10 h-10 rounded-xl border border-gray-200 bg-gray-50 gap-0.5 hover:bg-gray-100 transition-colors">
             <span className="text-[9px] font-bold text-gray-400 uppercase leading-none tracking-wider">{dayShort}</span>
             <span className="text-base font-bold text-black leading-none">{dayNum}</span>
           </Link>
@@ -182,17 +143,14 @@ export default function TodayPage() {
             <img src="/local-lookbook-logo.png" alt="Local Lookbook" className="h-9 w-auto object-contain brightness-0" />
           </Link>
 
-          <div className="flex items-center relative">
-            <Link href="/profile" className="p-2 rounded-full hover:bg-gray-50 transition-colors" aria-label="Help & settings">
+          <div className="flex items-center">
+            <Link href="/profile" className="p-2 rounded-full hover:bg-gray-50 transition-colors" aria-label="Help">
               <HelpCircle className="h-5 w-5 text-gray-400" />
             </Link>
 
             <div className="relative" ref={bellRef}>
-              <button
-                onClick={() => setShowNotifications((v) => !v)}
-                className="p-2 rounded-full hover:bg-gray-50 transition-colors relative"
-                aria-label="Notifications"
-              >
+              <button onClick={() => setShowNotifications((v) => !v)}
+                className="p-2 rounded-full hover:bg-gray-50 transition-colors" aria-label="Notifications">
                 <Bell className="h-5 w-5 text-gray-400" />
               </button>
               {showNotifications && (
@@ -250,93 +208,93 @@ export default function TodayPage() {
 
         {/* Today's Suggestions Card */}
         <div className="rounded-3xl border border-gray-100 shadow-sm bg-white overflow-hidden">
-          <div className="px-5 pt-5 pb-3 flex items-start justify-between">
-            <div>
-              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Today's Suggestions</p>
-              <h3 className="text-xl font-bold mt-1">Office Work</h3>
-              <p className="text-sm text-gray-400 mt-0.5">Business casual</p>
+
+          {/* Card header */}
+          <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Today&apos;s Suggestions</p>
+            {hasOutfits && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setOutfitIdx((i) => Math.max(0, i - 1))}
+                  disabled={outfitIdx === 0}
+                  className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center transition hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                  aria-label="Previous outfit"
+                >
+                  <ChevronLeft className="h-4 w-4 text-black" />
+                </button>
+                <span className="text-xs text-gray-400 font-medium tabular-nums w-8 text-center">
+                  {outfitIdx + 1}&nbsp;/&nbsp;{outfits.length}
+                </span>
+                <button
+                  onClick={() => setOutfitIdx((i) => Math.min(outfits.length - 1, i + 1))}
+                  disabled={outfitIdx === outfits.length - 1}
+                  className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center transition hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                  aria-label="Next outfit"
+                >
+                  <ChevronRight className="h-4 w-4 text-black" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* 4-slot outfit grid */}
+          {garmentsLoading ? (
+            <div className="grid grid-cols-2 gap-3 px-5 pb-5 animate-pulse">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex flex-col gap-2">
+                  <div className="h-3 w-16 rounded bg-gray-200" />
+                  <div className="aspect-[3/4] rounded-2xl bg-gray-200" />
+                </div>
+              ))}
             </div>
-            {hasOutfits && (
-              <span className="text-xs text-gray-400 bg-gray-50 border border-gray-100 rounded-full px-3 py-1.5 font-medium tabular-nums">
-                {outfitIdx + 1}&nbsp;/&nbsp;{outfits.length}
-              </span>
-            )}
-          </div>
-
-          {/* Outfit preview */}
-          <div className="relative mx-4 mb-1 bg-gray-50 rounded-2xl overflow-hidden min-h-[220px]">
-            {hasOutfits && (
-              <button
-                onClick={() => setOutfitIdx((i) => Math.max(0, i - 1))}
-                disabled={outfitIdx === 0}
-                className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center transition-shadow hover:shadow-lg disabled:opacity-25 disabled:cursor-not-allowed"
-                aria-label="Previous outfit"
-              >
-                <ChevronLeft className="h-4 w-4 text-black" />
-              </button>
-            )}
-
-            {garmentsLoading ? (
-              // Skeleton
-              <div className="flex flex-col items-center justify-center py-14 gap-3 animate-pulse">
-                <div className="w-24 h-28 rounded-2xl bg-gray-200" />
-                <div className="flex gap-3">
-                  <div className="w-14 h-14 rounded-xl bg-gray-200" />
-                  <div className="w-14 h-14 rounded-xl bg-gray-200" />
+          ) : (
+            <div className="grid grid-cols-2 gap-3 px-5 pb-5">
+              {currentOutfit.map((slot) => (
+                <div key={slot.key} className="flex flex-col gap-1.5">
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest pl-0.5">
+                    {slot.label}
+                  </p>
+                  {slot.item ? (
+                    <div className="flex flex-col gap-1">
+                      {slot.item.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={slot.item.imageUrl}
+                          alt={slot.item.name}
+                          className="w-full aspect-[3/4] object-cover rounded-2xl shadow-sm"
+                        />
+                      ) : (
+                        <div
+                          className="w-full aspect-[3/4] rounded-2xl flex items-center justify-center"
+                          style={{ backgroundColor: (slot.item.color ?? "#888888") + "22" }}
+                        >
+                          <Shirt className="h-8 w-8 text-gray-400" />
+                        </div>
+                      )}
+                      <p className="text-[9px] text-gray-400 truncate text-center leading-tight px-0.5">
+                        {slot.item.name}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="w-full aspect-[3/4] rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-1.5">
+                      <Shirt className="h-6 w-6 text-gray-300" />
+                      <p className="text-[9px] text-gray-300 font-medium">No {slot.label.toLowerCase()}</p>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ) : hasOutfits ? (
-              // Real outfit from closet
-              <div className="flex flex-wrap items-end justify-center gap-3 py-10 px-10">
-                {currentOutfit.map((g) => (
-                  <div key={g.id} className="flex flex-col items-center gap-1.5">
-                    {g.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={g.imageUrl}
-                        alt={g.name}
-                        className="w-20 h-24 object-cover rounded-xl shadow-sm"
-                      />
-                    ) : (
-                      <div
-                        className="w-20 h-24 rounded-xl flex items-center justify-center"
-                        style={{ backgroundColor: (g.color ?? "#111111") + "22" }}
-                      >
-                        <Shirt className="h-8 w-8 text-gray-400" />
-                      </div>
-                    )}
-                    <p className="text-[9px] text-gray-400 text-center truncate w-20 leading-tight">{g.name}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              // Empty closet placeholder
-              <div className="flex flex-col items-center justify-center py-14 gap-3">
-                <div className="w-24 h-28 rounded-2xl bg-gray-200 flex items-center justify-center">
-                  <Shirt className="h-12 w-12 text-gray-400" />
-                </div>
-                <div className="flex gap-3">
-                  <div className="w-14 h-14 rounded-xl bg-gray-300" />
-                  <div className="w-14 h-14 rounded-xl bg-gray-200" />
-                </div>
-                <p className="text-xs text-gray-400 font-medium mt-1">Add clothes to see suggestions</p>
-              </div>
-            )}
+              ))}
+            </div>
+          )}
 
-            {hasOutfits && (
-              <button
-                onClick={() => setOutfitIdx((i) => Math.min(outfits.length - 1, i + 1))}
-                disabled={outfitIdx === outfits.length - 1}
-                className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center transition-shadow hover:shadow-lg disabled:opacity-25 disabled:cursor-not-allowed"
-                aria-label="Next outfit"
-              >
-                <ChevronRight className="h-4 w-4 text-black" />
-              </button>
-            )}
-          </div>
+          {/* Empty state (no garments at all) */}
+          {!garmentsLoading && !hasOutfits && (
+            <div className="pb-5 px-5 -mt-3 text-center">
+              <p className="text-xs text-gray-400 font-medium">Add clothes to get outfit suggestions</p>
+            </div>
+          )}
 
-          <p className="text-[11px] text-gray-400 leading-relaxed px-5 py-4">
-            If you do not want to see a specific item, you can toggle{" "}
+          <p className="text-[11px] text-gray-400 leading-relaxed px-5 py-4 border-t border-gray-50">
+            If you do not want to see a specific item, toggle{" "}
             <span className="font-semibold text-gray-600">&ldquo;Show in outfits&rdquo;</span> to OFF.
           </p>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus, Shirt, X } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, MapPin, Plus, Search, Shirt, X } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -19,6 +19,177 @@ function firstDayOfMonth(y: number, m: number) { return new Date(y, m, 1).getDay
 const MONTH_NAMES = ["January","February","March","April","May","June",
   "July","August","September","October","November","December"];
 const DAY_LABELS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+// ─── Trip Plan Modal ──────────────────────────────────────────────────────────
+
+function TripPlanModal({
+  open, onClose, date, garments, existingPlan,
+}: {
+  open: boolean; onClose: () => void; date: string;
+  garments: Garment[]; existingPlan?: OutfitPlan;
+}) {
+  const { user } = useAuth();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(
+    new Set(existingPlan?.garmentIds ?? [])
+  );
+  const [filterCat, setFilterCat] = useState<GarmentCategory | "All">("All");
+  const [search, setSearch]       = useState("");
+  const [occasion, setOccasion]   = useState(existingPlan?.occasion ?? "");
+  const [notes, setNotes]         = useState(existingPlan?.notes ?? "");
+  const [loading, setLoading]     = useState(false);
+
+  const visible = garments.filter((g) => {
+    const matchCat = filterCat === "All" || g.category === filterCat;
+    const matchQ   = !search || g.name.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchQ;
+  });
+
+  const categories = ["All", ...Array.from(new Set(garments.map((g) => g.category)))] as (GarmentCategory | "All")[];
+
+  function toggle(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  async function save() {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const data = {
+        userId:     user.uid,
+        date,
+        garmentIds: Array.from(selectedIds),
+        occasion:   occasion || "Trip",
+        notes:      notes || undefined,
+        worn:       existingPlan?.worn ?? false,
+      };
+      if (existingPlan) await updateItem("outfitPlans", existingPlan.id, data);
+      else               await createItem("outfitPlans", data);
+      onClose();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const displayDate = new Date(date + "T12:00:00")
+    .toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
+
+  return (
+    <Modal open={open} onClose={onClose} title={`Pack for ${displayDate}`}>
+      <div className="space-y-4">
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#AAAAAA]" />
+          <input
+            className="w-full rounded-xl border border-[#E8E8E8] bg-[#F8F8F8] py-2.5 pl-9 pr-4 text-sm placeholder:text-[#AAAAAA] outline-none focus:border-[#111111] transition"
+            placeholder="Search items…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        {/* Category filter */}
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-0.5">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setFilterCat(cat)}
+              className={cn(
+                "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                filterCat === cat
+                  ? "bg-[#111111] text-white"
+                  : "bg-[#F3F3F3] text-[#888888] hover:bg-[#E8E8E8] hover:text-[#111111]"
+              )}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Garment grid */}
+        {garments.length === 0 ? (
+          <p className="text-sm text-center text-[#AAAAAA] py-6">No items in your closet yet</p>
+        ) : (
+          <div className="max-h-72 overflow-y-auto">
+            <div className="grid grid-cols-3 gap-2">
+              {visible.map((g) => {
+                const selected = selectedIds.has(g.id);
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => toggle(g.id)}
+                    className={cn(
+                      "relative flex flex-col rounded-xl overflow-hidden border-2 transition-all text-left",
+                      selected ? "border-[#111111] scale-[1.02] shadow-sm" : "border-transparent hover:border-[#DDDDDD]"
+                    )}
+                  >
+                    <div className="aspect-square bg-[#F5F5F5]">
+                      {g.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={g.imageUrl} alt={g.name} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center" style={{ backgroundColor: (g.color ?? "#888") + "22" }}>
+                          <Shirt className="h-6 w-6 text-[#CCCCCC]" />
+                        </div>
+                      )}
+                    </div>
+                    <p className="truncate px-1.5 py-1 text-[10px] text-[#555555] bg-white">{g.name}</p>
+                    {selected && (
+                      <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#111111] flex items-center justify-center">
+                        <Check className="h-3 w-3 text-white" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+              {visible.length === 0 && (
+                <p className="col-span-3 text-center text-sm text-[#AAAAAA] py-6">No items match</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {selectedIds.size > 0 && (
+          <p className="text-xs text-center text-[#888888]">
+            {selectedIds.size} item{selectedIds.size !== 1 ? "s" : ""} selected
+          </p>
+        )}
+
+        {/* Occasion + notes */}
+        <input
+          className="w-full rounded-xl border border-[#E8E8E8] bg-white px-4 py-2.5 text-sm placeholder:text-[#AAAAAA] outline-none focus:border-[#111111] transition"
+          placeholder="Occasion / destination (optional)"
+          value={occasion}
+          onChange={(e) => setOccasion(e.target.value)}
+        />
+        <input
+          className="w-full rounded-xl border border-[#E8E8E8] bg-white px-4 py-2.5 text-sm placeholder:text-[#AAAAAA] outline-none focus:border-[#111111] transition"
+          placeholder="Notes (optional)"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+        />
+
+        <Button className="w-full" onClick={save} isLoading={loading} disabled={selectedIds.size === 0}>
+          {existingPlan ? "Update trip pack" : `Save ${selectedIds.size > 0 ? `(${selectedIds.size} items)` : "trip"}`}
+        </Button>
+
+        {existingPlan && (
+          <button
+            onClick={async () => { await removeItem("outfitPlans", existingPlan.id); onClose(); }}
+            className="flex w-full items-center justify-center gap-1.5 py-2 text-xs text-red-400 transition hover:text-red-600"
+          >
+            <X className="h-3.5 w-3.5" /> Remove plan
+          </button>
+        )}
+      </div>
+    </Modal>
+  );
+}
 
 // ─── Plan Modal ───────────────────────────────────────────────────────────────
 
@@ -42,19 +213,15 @@ function PlanModal({
     try {
       const chosenOutfit = outfits.find((o) => o.id === selectedOutfit);
       const data = {
-        userId: user.uid,
-        date,
+        userId: user.uid, date,
         outfitId:   selectedOutfit || undefined,
         garmentIds: chosenOutfit?.garmentIds ?? [],
         occasion:   occasion || undefined,
         notes:      notes || undefined,
         worn:       existingPlan?.worn ?? false,
       };
-      if (existingPlan) {
-        await updateItem("outfitPlans", existingPlan.id, data);
-      } else {
-        await createItem("outfitPlans", data);
-      }
+      if (existingPlan) await updateItem("outfitPlans", existingPlan.id, data);
+      else               await createItem("outfitPlans", data);
       onClose();
     } finally {
       setLoading(false);
@@ -161,10 +328,11 @@ function PlanModal({
 
 export default function CalendarPage() {
   const now  = new Date();
-  const [year, setYear]     = useState(now.getFullYear());
-  const [month, setMonth]   = useState(now.getMonth());
+  const [year, setYear]           = useState(now.getFullYear());
+  const [month, setMonth]         = useState(now.getMonth());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [planModalOpen, setPlanModalOpen] = useState(false);
+  const [planModalOpen, setPlanModalOpen]     = useState(false);
+  const [tripModalOpen, setTripModalOpen]     = useState(false);
 
   const { items: plans }    = useUserCollection<OutfitPlan>("outfitPlans");
   const { items: outfits }  = useUserCollection<Outfit>("outfits");
@@ -310,10 +478,17 @@ export default function CalendarPage() {
             <p className="mb-3 text-sm text-[#AAAAAA]">Nothing planned for this day.</p>
           )}
 
-          <Button className="mt-3 w-full gap-1.5" onClick={() => setPlanModalOpen(true)}>
-            <Plus className="h-4 w-4" />
-            {existingPlan ? "Edit plan" : "Plan outfit"}
-          </Button>
+          {/* Action buttons */}
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <Button className="gap-1.5" onClick={() => setPlanModalOpen(true)}>
+              <Plus className="h-4 w-4" />
+              {existingPlan ? "Edit plan" : "Plan outfit"}
+            </Button>
+            <Button variant="outline" className="gap-1.5" onClick={() => setTripModalOpen(true)}>
+              <MapPin className="h-4 w-4" />
+              Plan trip
+            </Button>
+          </div>
         </div>
       )}
 
@@ -363,7 +538,7 @@ export default function CalendarPage() {
         )}
       </div>
 
-      {/* Plan modal */}
+      {/* Plan outfit modal */}
       {selectedDate && (
         <PlanModal
           open={planModalOpen}
@@ -372,6 +547,17 @@ export default function CalendarPage() {
           outfits={outfits}
           garments={garments}
           existingPlan={existingPlan}
+        />
+      )}
+
+      {/* Plan trip modal */}
+      {selectedDate && (
+        <TripPlanModal
+          open={tripModalOpen}
+          onClose={() => setTripModalOpen(false)}
+          date={selectedDate}
+          garments={garments}
+          existingPlan={existingPlan?.occasion === "Trip" ? existingPlan : undefined}
         />
       )}
     </div>
