@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useAddModal } from "@/lib/add-modal-context";
+import { useUserCollection } from "@/lib/hooks/use-user-collection";
+import { Garment, Outfit } from "@/types";
 import {
   HelpCircle,
   Bell,
@@ -65,11 +67,43 @@ function WeatherIcon({ code, className }: { code: number; className?: string }) 
 
 // ── Outfit data ───────────────────────────────────────────────────────────────
 
-const OUTFITS = [
-  { id: 1, label: "Classic Business Casual" },
-  { id: 2, label: "Smart Casual" },
-  { id: 3, label: "Formal Option" },
-];
+type Suggestion = {
+  id: string;
+  title: string;
+  subtitle: string;
+  label: string;
+  garments: Garment[];
+};
+
+function buildSuggestions(outfits: Outfit[], garments: Garment[]): Suggestion[] {
+  const garmentMap = new Map(garments.map((item) => [item.id, item]));
+  const saved = outfits.slice(0, 5).map((outfit) => ({
+    id: `outfit-${outfit.id}`,
+    title: outfit.name,
+    subtitle: outfit.occasion || outfit.season || "Saved outfit",
+    label: outfit.weatherTags?.length ? outfit.weatherTags.join(" / ") : "Ready from your outfits",
+    garments: outfit.garmentIds.map((id) => garmentMap.get(id)).filter(Boolean) as Garment[],
+  }));
+
+  if (saved.length) return saved;
+
+  const top = garments.find((item) => ["Top", "Kurta", "Suit", "Outerwear"].includes(item.category));
+  const bottom = garments.find((item) => item.category === "Bottom");
+  const dress = garments.find((item) => ["Dress", "Saree", "Lehenga"].includes(item.category));
+  const shoes = garments.find((item) => item.category === "Shoes");
+  const accessory = garments.find((item) => item.category === "Accessory");
+  const pieces = [dress || top, !dress ? bottom : undefined, shoes, accessory].filter(Boolean) as Garment[];
+
+  if (pieces.length < 2) return [];
+
+  return [{
+    id: "generated-1",
+    title: "Today’s Best Match",
+    subtitle: pieces.map((item) => item.category).slice(0, 3).join(" + "),
+    label: "Built from your closet",
+    garments: pieces,
+  }];
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -86,6 +120,8 @@ export default function TodayPage() {
   const { user } = useAuth();
   const { openAdd } = useAddModal();
   const { weather, loading: weatherLoading } = useWeather();
+  const { items: garments, loading: garmentsLoading } = useUserCollection<Garment>("garments");
+  const { items: savedOutfits, loading: outfitsLoading } = useUserCollection<Outfit>("outfits");
   const [outfitIdx, setOutfitIdx] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const bellRef = useRef<HTMLDivElement>(null);
@@ -95,6 +131,9 @@ export default function TodayPage() {
   const dayNum    = today.getDate();
   const dayShort  = today.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
   const fullDate  = today.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+  const suggestions = buildSuggestions(savedOutfits, garments);
+  const activeSuggestion = suggestions[outfitIdx];
+  const suggestionsLoading = garmentsLoading || outfitsLoading;
 
   // Close notification panel on outside click
   useEffect(() => {
@@ -106,6 +145,12 @@ export default function TodayPage() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  useEffect(() => {
+    if (outfitIdx > 0 && outfitIdx >= suggestions.length) {
+      setOutfitIdx(Math.max(0, suggestions.length - 1));
+    }
+  }, [outfitIdx, suggestions.length]);
 
   return (
     <div className="min-h-screen bg-[#050505] text-white">
@@ -229,18 +274,22 @@ export default function TodayPage() {
               <p className="text-[11px] font-semibold uppercase tracking-widest text-white/42">
                 Today's Suggestions
               </p>
-              <h3 className="mt-1 text-xl font-semibold text-white">Office Work</h3>
-              <p className="mt-0.5 text-sm text-white/52">Business casual</p>
+              <h3 className="mt-1 text-xl font-semibold text-white">
+                {activeSuggestion?.title ?? (suggestionsLoading ? "Reading your closet" : "No suggestion yet")}
+              </h3>
+              <p className="mt-0.5 text-sm text-white/52">
+                {activeSuggestion?.subtitle ?? (suggestionsLoading ? "Building today’s match" : "Add at least two closet pieces")}
+              </p>
             </div>
             <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-medium tabular-nums text-white/52">
-              {outfitIdx + 1}&nbsp;/&nbsp;{OUTFITS.length}
+              {suggestions.length ? outfitIdx + 1 : 0}&nbsp;/&nbsp;{suggestions.length || 0}
             </span>
           </div>
 
           <div className="relative mx-4 mb-1 overflow-hidden rounded-2xl border border-white/10 bg-[#111111]">
             <button
               onClick={() => setOutfitIdx((i) => Math.max(0, i - 1))}
-              disabled={outfitIdx === 0}
+              disabled={outfitIdx === 0 || suggestions.length <= 1}
               className="absolute left-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] shadow-md transition hover:bg-white/[0.12] disabled:cursor-not-allowed disabled:opacity-25"
               aria-label="Previous outfit"
             >
@@ -248,21 +297,45 @@ export default function TodayPage() {
             </button>
 
             <div className="flex min-h-[18rem] flex-col items-center justify-center gap-3 px-8 py-12 sm:min-h-[22rem]">
-              <div className="flex h-28 w-24 items-center justify-center rounded-2xl bg-white/[0.08]">
-                <Shirt className="h-12 w-12 text-white/35" />
-              </div>
-              <div className="flex gap-3">
-                <div className="h-14 w-14 rounded-xl bg-white/[0.12]" />
-                <div className="h-14 w-14 rounded-xl bg-white/[0.08]" />
-              </div>
-              <p className="mt-1 text-xs font-medium text-white/45">
-                {OUTFITS[outfitIdx].label}
-              </p>
+              {suggestionsLoading ? (
+                <>
+                  <div className="h-28 w-24 animate-pulse rounded-2xl bg-white/[0.08]" />
+                  <div className="flex gap-3">
+                    <div className="h-14 w-14 animate-pulse rounded-xl bg-white/[0.10]" />
+                    <div className="h-14 w-14 animate-pulse rounded-xl bg-white/[0.07]" />
+                  </div>
+                  <p className="mt-1 text-xs font-medium text-white/45">Checking your closet</p>
+                </>
+              ) : activeSuggestion ? (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    {activeSuggestion.garments.slice(0, 4).map((garment, index) => (
+                      <GarmentTile key={`${activeSuggestion.id}-${garment.id}`} garment={garment} featured={index === 0} />
+                    ))}
+                  </div>
+                  <p className="mt-1 text-xs font-medium text-white/45">{activeSuggestion.label}</p>
+                </>
+              ) : (
+                <>
+                  <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-white/[0.08]">
+                    <Shirt className="h-10 w-10 text-white/35" />
+                  </div>
+                  <p className="max-w-xs text-center text-sm text-white/58">
+                    Add a top and bottom, or save an outfit, and Mastical will suggest looks here.
+                  </p>
+                  <button
+                    onClick={openAdd}
+                    className="mt-2 rounded-full bg-[#F7FBFF] px-4 py-2 text-sm font-medium text-[#070707]"
+                  >
+                    Add closet piece
+                  </button>
+                </>
+              )}
             </div>
 
             <button
-              onClick={() => setOutfitIdx((i) => Math.min(OUTFITS.length - 1, i + 1))}
-              disabled={outfitIdx === OUTFITS.length - 1}
+              onClick={() => setOutfitIdx((i) => Math.min(suggestions.length - 1, i + 1))}
+              disabled={outfitIdx >= suggestions.length - 1 || suggestions.length <= 1}
               className="absolute right-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] shadow-md transition hover:bg-white/[0.12] disabled:cursor-not-allowed disabled:opacity-25"
               aria-label="Next outfit"
             >
@@ -308,6 +381,34 @@ export default function TodayPage() {
         </div>
       </nav>
 
+    </div>
+  );
+}
+
+function GarmentTile({ garment, featured = false }: { garment: Garment; featured?: boolean }) {
+  return (
+    <div className={featured ? "col-span-2 flex flex-col items-center" : ""}>
+      <div
+        className={
+          featured
+            ? "relative h-28 w-24 overflow-hidden rounded-2xl bg-white/[0.08]"
+            : "relative h-16 w-16 overflow-hidden rounded-xl bg-white/[0.08]"
+        }
+      >
+        {garment.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={garment.imageUrl} alt={garment.name} className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <Shirt className={featured ? "h-10 w-10 text-white/35" : "h-6 w-6 text-white/35"} />
+          </div>
+        )}
+      </div>
+      {featured && (
+        <p className="mt-2 max-w-[11rem] truncate text-center text-xs font-medium text-white/58">
+          {garment.name}
+        </p>
+      )}
     </div>
   );
 }
