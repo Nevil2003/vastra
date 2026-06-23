@@ -2,15 +2,29 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { useAddModal } from "@/lib/add-modal-context";
+import { AddWishlistModal } from "@/components/wardrobe/add-wishlist-modal";
 import { Home, Plus, Search, Shirt, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const { openAdd } = useAddModal();
   const pathname = usePathname();
+  const [wishlistOpen, setWishlistOpen] = useState(false);
+  const isWishlist = pathname === "/wishlist" || pathname.startsWith("/wishlist/");
+
+  function handleAdd() {
+    if (isWishlist) {
+      setWishlistOpen(true);
+      return;
+    }
+
+    openAdd();
+  }
 
   return (
+    <>
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-100 bg-white">
       <div className="flex items-center justify-around px-2 h-16 max-w-5xl mx-auto">
         {/* Home */}
@@ -26,7 +40,7 @@ export function Navbar() {
         {/* Add — elevated FAB */}
         <div className="flex flex-col items-center -mt-5">
           <button
-            onClick={openAdd}
+            onClick={handleAdd}
             className="w-14 h-14 rounded-full bg-black flex items-center justify-center shadow-lg transition-transform active:scale-95"
           >
             <Plus className="h-6 w-6 text-white" strokeWidth={2.5} />
@@ -44,6 +58,8 @@ export function Navbar() {
         </BottomNavItem>
       </div>
     </nav>
+    <AddWishlistModal open={wishlistOpen} onClose={() => setWishlistOpen(false)} />
+    </>
   );
 }
 
