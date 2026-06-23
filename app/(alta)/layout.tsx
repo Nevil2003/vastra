@@ -15,7 +15,7 @@ export default function AltaLayout({ children }: { children: React.ReactNode }) 
 
   if (loading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white text-sm text-[#888888]">
+      <div className="flex min-h-screen items-center justify-center bg-[#050505] text-sm text-white/58">
         Loading...
       </div>
     );

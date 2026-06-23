@@ -11,7 +11,7 @@ import {
   Home,
   Shirt,
   Plus,
-  Search,
+  Heart,
   ChevronLeft,
   ChevronRight,
   Cloud,
@@ -108,21 +108,21 @@ export default function TodayPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-[#050505] text-white">
 
       {/* ── Header ──────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-100">
-        <div className="flex items-center justify-between px-4 h-14 max-w-5xl mx-auto">
+      <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#070707]/92 backdrop-blur-xl">
+        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
 
           {/* Date → calendar */}
           <Link
             href="/calendar"
-            className="flex flex-col items-center justify-center w-10 h-10 rounded-xl border border-gray-200 bg-gray-50 gap-0.5 hover:bg-gray-100 transition-colors"
+            className="flex h-10 w-10 flex-col items-center justify-center gap-0.5 rounded-xl border border-white/10 bg-white/[0.05] transition-colors hover:bg-white/[0.08]"
           >
-            <span className="text-[9px] font-bold text-gray-400 uppercase leading-none tracking-wider">
+            <span className="text-[9px] font-bold uppercase leading-none tracking-wider text-white/40">
               {dayShort}
             </span>
-            <span className="text-base font-bold text-black leading-none">{dayNum}</span>
+            <span className="text-base font-bold leading-none text-white">{dayNum}</span>
           </Link>
 
           {/* Logo → home */}
@@ -130,7 +130,7 @@ export default function TodayPage() {
             <img
               src="/mastical-white-logo.svg"
               alt="Mastical"
-              className="h-9 w-auto object-contain brightness-0"
+              className="h-8 w-auto object-contain"
             />
           </Link>
 
@@ -139,28 +139,28 @@ export default function TodayPage() {
             {/* Help → profile */}
             <Link
               href="/profile"
-              className="p-2 rounded-full hover:bg-gray-50 transition-colors"
+              className="rounded-full p-2 transition-colors hover:bg-white/[0.07]"
               aria-label="Help & settings"
             >
-              <HelpCircle className="h-5 w-5 text-gray-400" />
+              <HelpCircle className="h-5 w-5 text-white/45" />
             </Link>
 
             {/* Bell → notifications dropdown */}
             <div className="relative" ref={bellRef}>
               <button
                 onClick={() => setShowNotifications((v) => !v)}
-                className="p-2 rounded-full hover:bg-gray-50 transition-colors relative"
+                className="relative rounded-full p-2 transition-colors hover:bg-white/[0.07]"
                 aria-label="Notifications"
               >
-                <Bell className="h-5 w-5 text-gray-400" />
+                <Bell className="h-5 w-5 text-white/45" />
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 top-10 w-64 bg-white border border-gray-100 rounded-2xl shadow-lg py-4 px-4 z-50">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                <div className="absolute right-0 top-10 z-50 w-64 rounded-2xl border border-white/10 bg-[#101010] px-4 py-4 shadow-2xl">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/45">
                     Notifications
                   </p>
-                  <p className="text-sm text-gray-400 text-center py-4">
+                  <p className="py-4 text-center text-sm text-white/45">
                     No new notifications
                   </p>
                 </div>
@@ -170,92 +170,92 @@ export default function TodayPage() {
             {/* User → profile */}
             <Link
               href="/profile"
-              className="p-2 rounded-full hover:bg-gray-50 transition-colors"
+              className="rounded-full p-2 transition-colors hover:bg-white/[0.07]"
               aria-label="Profile"
             >
-              <User className="h-5 w-5 text-gray-400" />
+              <User className="h-5 w-5 text-white/45" />
             </Link>
           </div>
         </div>
       </header>
 
       {/* ── Content ─────────────────────────────────────────────────── */}
-      <main className="max-w-5xl mx-auto px-4 pt-6 pb-28 flex flex-col gap-6">
+      <main className="mx-auto flex max-w-5xl flex-col gap-5 px-4 pb-28 pt-6 sm:gap-6">
 
         {/* Greeting + Weather */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+            <p className="text-xs font-medium uppercase tracking-[0.16em] text-white/42">
               {fullDate}
             </p>
-            <h2 className="text-2xl font-bold mt-1 leading-snug">
+            <h2 className="mt-1 text-2xl font-semibold leading-snug text-white sm:text-3xl">
               {getGreeting()},<br />{firstName}
             </h2>
           </div>
 
           {/* Weather pill */}
-          <div className="shrink-0 bg-gray-50 rounded-2xl px-4 py-3 text-right border border-gray-100 min-w-[90px]">
+          <div className="min-w-[90px] shrink-0 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-right">
             {weatherLoading ? (
               <div className="flex flex-col items-end gap-1.5 animate-pulse">
-                <div className="h-8 w-14 rounded bg-gray-200" />
-                <div className="h-3 w-20 rounded bg-gray-200" />
+                <div className="h-8 w-14 rounded bg-white/10" />
+                <div className="h-3 w-20 rounded bg-white/10" />
               </div>
             ) : weather ? (
               <>
                 <div className="flex items-end justify-end gap-1.5">
-                  <WeatherIcon code={weather.code} className="h-4 w-4 text-gray-400 mb-1" />
+                  <WeatherIcon code={weather.code} className="mb-1 h-4 w-4 text-cyan-100/70" />
                   <span className="text-3xl font-light leading-none">{weather.temp}°</span>
                 </div>
-                <p className="text-[11px] text-gray-400 mt-1 font-medium">
+                <p className="mt-1 text-[11px] font-medium text-white/45">
                   H: {weather.high}° / L: {weather.low}°
                 </p>
               </>
             ) : (
               <>
                 <div className="flex items-end justify-end gap-1.5">
-                  <Cloud className="h-4 w-4 text-gray-400 mb-1" />
+                  <Cloud className="mb-1 h-4 w-4 text-white/45" />
                   <span className="text-3xl font-light leading-none">--°</span>
                 </div>
-                <p className="text-[11px] text-gray-400 mt-1 font-medium">Enable location</p>
+                <p className="mt-1 text-[11px] font-medium text-white/45">Enable location</p>
               </>
             )}
           </div>
         </div>
 
         {/* Today's Suggestions Card */}
-        <div className="rounded-3xl border border-gray-100 shadow-sm bg-white overflow-hidden">
-          <div className="px-5 pt-5 pb-3 flex items-start justify-between">
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.055] shadow-[0_18px_55px_rgba(0,0,0,0.24)]">
+          <div className="flex items-start justify-between px-5 pb-3 pt-5">
             <div>
-              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-white/42">
                 Today's Suggestions
               </p>
-              <h3 className="text-xl font-bold mt-1">Office Work</h3>
-              <p className="text-sm text-gray-400 mt-0.5">Business casual</p>
+              <h3 className="mt-1 text-xl font-semibold text-white">Office Work</h3>
+              <p className="mt-0.5 text-sm text-white/52">Business casual</p>
             </div>
-            <span className="text-xs text-gray-400 bg-gray-50 border border-gray-100 rounded-full px-3 py-1.5 font-medium tabular-nums">
+            <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-medium tabular-nums text-white/52">
               {outfitIdx + 1}&nbsp;/&nbsp;{OUTFITS.length}
             </span>
           </div>
 
-          <div className="relative mx-4 mb-1 bg-gray-50 rounded-2xl overflow-hidden">
+          <div className="relative mx-4 mb-1 overflow-hidden rounded-2xl border border-white/10 bg-[#111111]">
             <button
               onClick={() => setOutfitIdx((i) => Math.max(0, i - 1))}
               disabled={outfitIdx === 0}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center transition-shadow hover:shadow-lg disabled:opacity-25 disabled:cursor-not-allowed"
+              className="absolute left-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] shadow-md transition hover:bg-white/[0.12] disabled:cursor-not-allowed disabled:opacity-25"
               aria-label="Previous outfit"
             >
-              <ChevronLeft className="h-4 w-4 text-black" />
+              <ChevronLeft className="h-4 w-4 text-white" />
             </button>
 
-            <div className="flex flex-col items-center justify-center py-14 gap-3">
-              <div className="w-24 h-28 rounded-2xl bg-gray-200 flex items-center justify-center">
-                <Shirt className="h-12 w-12 text-gray-400" />
+            <div className="flex min-h-[18rem] flex-col items-center justify-center gap-3 px-8 py-12 sm:min-h-[22rem]">
+              <div className="flex h-28 w-24 items-center justify-center rounded-2xl bg-white/[0.08]">
+                <Shirt className="h-12 w-12 text-white/35" />
               </div>
               <div className="flex gap-3">
-                <div className="w-14 h-14 rounded-xl bg-gray-300" />
-                <div className="w-14 h-14 rounded-xl bg-gray-200" />
+                <div className="h-14 w-14 rounded-xl bg-white/[0.12]" />
+                <div className="h-14 w-14 rounded-xl bg-white/[0.08]" />
               </div>
-              <p className="text-xs text-gray-400 font-medium mt-1">
+              <p className="mt-1 text-xs font-medium text-white/45">
                 {OUTFITS[outfitIdx].label}
               </p>
             </div>
@@ -263,47 +263,47 @@ export default function TodayPage() {
             <button
               onClick={() => setOutfitIdx((i) => Math.min(OUTFITS.length - 1, i + 1))}
               disabled={outfitIdx === OUTFITS.length - 1}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center transition-shadow hover:shadow-lg disabled:opacity-25 disabled:cursor-not-allowed"
+              className="absolute right-3 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] shadow-md transition hover:bg-white/[0.12] disabled:cursor-not-allowed disabled:opacity-25"
               aria-label="Next outfit"
             >
-              <ChevronRight className="h-4 w-4 text-black" />
+              <ChevronRight className="h-4 w-4 text-white" />
             </button>
           </div>
 
-          <p className="text-[11px] text-gray-400 leading-relaxed px-5 py-4">
+          <p className="px-5 py-4 text-[11px] leading-relaxed text-white/42">
             If you do not want to see a specific item, you can toggle{" "}
-            <span className="font-semibold text-gray-600">&ldquo;Show in outfits&rdquo;</span> to OFF.
+            <span className="font-semibold text-white/64">&ldquo;Show in outfits&rdquo;</span> to OFF.
           </p>
         </div>
       </main>
 
       {/* ── Bottom Nav ──────────────────────────────────────────────── */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-gray-100">
-        <div className="max-w-5xl mx-auto flex items-center justify-around px-2 h-16">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-[#070707]/92 pb-safe backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-5xl items-center justify-around px-2">
           <Link href="/today" className="flex flex-col items-center gap-1 py-2 px-3 min-w-[3rem]">
-            <Home className="h-5 w-5 text-black" strokeWidth={2.5} />
-            <span className="text-[10px] font-bold text-black leading-none">Home</span>
+            <Home className="h-5 w-5 text-cyan-100" strokeWidth={2.5} />
+            <span className="text-[10px] font-bold leading-none text-white">Home</span>
           </Link>
 
           <Link href="/closet" className="flex flex-col items-center gap-1 py-2 px-3 min-w-[3rem]">
-            <Shirt className="h-5 w-5 text-gray-300" />
-            <span className="text-[10px] font-medium text-gray-300 leading-none">Clothing</span>
+            <Shirt className="h-5 w-5 text-white/35" />
+            <span className="text-[10px] font-medium leading-none text-white/35">Clothing</span>
           </Link>
 
-          <button onClick={openAdd} className="flex flex-col items-center -mt-5 px-3">
-            <div className="w-14 h-14 rounded-full bg-black flex items-center justify-center shadow-lg active:scale-95 transition-transform">
-              <Plus className="h-6 w-6 text-white" strokeWidth={2.5} />
+          <button onClick={openAdd} className="flex -translate-y-4 flex-col items-center px-3" aria-label="Add item">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-[#F7FBFF] text-[#070707] shadow-[0_12px_28px_rgba(0,0,0,0.35)] transition-transform active:scale-95">
+              <Plus className="h-6 w-6" strokeWidth={2.5} />
             </div>
           </button>
 
-          <Link href="/wardrobe" className="flex flex-col items-center gap-1 py-2 px-3 min-w-[3rem]">
-            <Search className="h-5 w-5 text-gray-300" />
-            <span className="text-[10px] font-medium text-gray-300 leading-none">Search</span>
+          <Link href="/wishlist" className="flex flex-col items-center gap-1 py-2 px-3 min-w-[3rem]">
+            <Heart className="h-5 w-5 text-white/35" />
+            <span className="text-[10px] font-medium leading-none text-white/35">Wishlist</span>
           </Link>
 
           <Link href="/profile" className="flex flex-col items-center gap-1 py-2 px-3 min-w-[3rem]">
-            <User className="h-5 w-5 text-gray-300" />
-            <span className="text-[10px] font-medium text-gray-300 leading-none">Profile</span>
+            <User className="h-5 w-5 text-white/35" />
+            <span className="text-[10px] font-medium leading-none text-white/35">Profile</span>
           </Link>
         </div>
       </nav>
