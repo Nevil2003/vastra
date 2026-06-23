@@ -45,17 +45,17 @@ export default function LoginPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#111111]">Welcome back</h1>
-        <p className="mt-1 text-sm text-[#888888]">Sign in to your closet</p>
+        <h1 className="text-2xl font-bold text-white">Welcome back</h1>
+        <p className="mt-1 text-sm text-white/58">Sign in to Mastical AI Closet</p>
       </div>
 
       <form onSubmit={submit} className="space-y-4">
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-[#111111]">Email</label>
+          <label className="text-sm font-medium text-white/78">Email</label>
           <Input type="email" required placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-[#111111]">Password</label>
+          <label className="text-sm font-medium text-white/78">Password</label>
           <Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
         {error && <p className="text-sm text-red-500">{error}</p>}
@@ -73,8 +73,8 @@ export default function LoginPage() {
       </Button>
 
       <p className="text-center text-sm text-[#888888]">
-        New to Local Lookbook?{" "}
-        <Link href="/signup" className="font-semibold text-[#111111] hover:underline">
+        New to Mastical?{" "}
+        <Link href="/signup" className="font-semibold text-cyan-100 hover:underline">
           Create an account
         </Link>
       </p>

@@ -6,9 +6,9 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
     <input
       ref={ref}
       className={cn(
-        "w-full rounded-xl border border-[#E8E8E8] bg-white px-4 py-2.5 text-sm text-[#111111]",
-        "placeholder:text-[#AAAAAA] outline-none transition-all duration-200",
-        "hover:border-[#CCCCCC] focus:border-[#111111] focus:ring-2 focus:ring-[#111111]/10",
+        "w-full rounded-xl border border-white/15 bg-white/[0.07] px-4 py-2.5 text-sm text-white",
+        "placeholder:text-white/35 outline-none transition-all duration-200",
+        "hover:border-white/25 focus:border-cyan-200/70 focus:ring-2 focus:ring-cyan-200/15",
         "disabled:cursor-not-allowed disabled:opacity-60",
         className
       )}

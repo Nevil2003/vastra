@@ -12,12 +12,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", isLoading, asSpan, children, ...props }, ref) => {
     const variants = {
       primary:
-        "bg-[#111111] text-white hover:bg-[#333333] focus-visible:ring-[#111111]/40",
+        "border border-white/20 bg-[#F7FBFF] text-[#030306] shadow-[0_0_34px_rgba(255,255,255,0.18)] hover:bg-cyan-100 focus-visible:ring-cyan-300/50",
       secondary:
-        "bg-[#F5F5F5] text-[#111111] hover:bg-[#E8E8E8] focus-visible:ring-[#111111]/20",
+        "border border-white/15 bg-white/[0.08] text-white hover:border-cyan-200/60 hover:bg-cyan-200/10 focus-visible:ring-cyan-300/40",
       outline:
-        "border border-[#111111] text-[#111111] hover:bg-[#111111] hover:text-white focus-visible:ring-[#111111]/30",
-      ghost: "text-[#111111] hover:bg-[#F0F0F0] focus-visible:ring-[#111111]/20",
+        "border border-cyan-200/45 text-cyan-100 hover:bg-cyan-200/10 hover:text-white focus-visible:ring-cyan-300/40",
+      ghost: "text-white/78 hover:bg-white/[0.07] hover:text-white focus-visible:ring-cyan-300/30",
       danger: "bg-[#EF4444] text-white hover:bg-[#DC2626] focus-visible:ring-[#EF4444]/40",
     };
 
@@ -30,7 +30,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const classes = cn(
       "inline-flex items-center justify-center gap-2 rounded-full font-medium",
       "transition-all duration-200 ease-out active:scale-[0.97]",
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAFAFA]",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#030306]",
       "disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100",
       variants[variant],
       sizes[size],

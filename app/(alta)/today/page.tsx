@@ -128,8 +128,8 @@ export default function TodayPage() {
           {/* Logo → home */}
           <Link href="/today" className="flex items-center">
             <img
-              src="/local-lookbook-logo.png"
-              alt="Local Lookbook"
+              src="/mastical-white-logo.svg"
+              alt="Mastical"
               className="h-9 w-auto object-contain brightness-0"
             />
           </Link>

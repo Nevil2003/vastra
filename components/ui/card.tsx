@@ -13,7 +13,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-[#E8E8E8] bg-white p-5 shadow-sm",
+        "mastical-glass rounded-2xl p-5",
         hover && "transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md",
         className
       )}
@@ -25,7 +25,7 @@ export function Card({
 
 export function CardTitle({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <h3 className={cn("text-base font-semibold text-[#111111]", className)}>{children}</h3>
+    <h3 className={cn("text-base font-semibold text-white", className)}>{children}</h3>
   );
 }
 

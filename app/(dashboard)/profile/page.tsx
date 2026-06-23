@@ -177,7 +177,7 @@ export default function ProfilePage() {
             <div>
               <p className="text-sm font-semibold text-[#111111]">Your profile is almost complete</p>
               <p className="mt-0.5 text-xs text-[#AAAAAA]">
-                Add your name and sizes to get the most out of Vastra
+                Add your name and sizes to get the most out of Mastical AI Closet
               </p>
             </div>
             <ChevronRight className="h-5 w-5 shrink-0 text-[#CCCCCC]" />

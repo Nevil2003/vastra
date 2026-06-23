@@ -25,8 +25,8 @@ export function Navbar() {
 
   return (
     <>
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-100 bg-white">
-      <div className="flex items-center justify-around px-2 h-16 max-w-5xl mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/[0.08] bg-black/55 backdrop-blur-2xl">
+      <div className="mx-auto flex h-16 max-w-5xl items-center justify-around px-2">
         {/* Home */}
         <BottomNavItem href="/today" label="Home" pathname={pathname}>
           <Home className="h-5 w-5" />
@@ -41,9 +41,9 @@ export function Navbar() {
         <div className="flex flex-col items-center -mt-5">
           <button
             onClick={handleAdd}
-            className="w-14 h-14 rounded-full bg-black flex items-center justify-center shadow-lg transition-transform active:scale-95"
+            className="flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-[#F7FBFF] text-[#030306] shadow-[0_0_34px_rgba(255,255,255,0.22)] transition-transform active:scale-95"
           >
-            <Plus className="h-6 w-6 text-white" strokeWidth={2.5} />
+            <Plus className="h-6 w-6" strokeWidth={2.5} />
           </button>
         </div>
 
@@ -71,12 +71,12 @@ function BottomNavItem({
   const active = pathname === href || pathname.startsWith(href + "/");
   return (
     <Link href={href} className="flex flex-col items-center gap-1 py-2 px-3 min-w-[3rem]">
-      <span className={cn("transition", active ? "text-black" : "text-gray-300")}>
+      <span className={cn("transition", active ? "text-cyan-100" : "text-white/35")}>
         {children}
       </span>
       <span className={cn(
         "text-[10px] leading-none",
-        active ? "font-bold text-black" : "font-medium text-gray-300"
+        active ? "font-bold text-white" : "font-medium text-white/35"
       )}>
         {label}
       </span>
