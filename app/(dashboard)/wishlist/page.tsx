@@ -15,19 +15,27 @@ export default function WishlistPage() {
 
   const active = items.filter((i) => !i.purchased);
   const purchased = items.filter((i) => i.purchased);
+  const highPriority = active.filter((i) => i.priority === "high").length;
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#111111]">Wishlist</h1>
-          <p className="mt-0.5 text-sm text-[#888888]">{active.length} items saved</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-cyan-100/70">Intent board</p>
+          <h1 className="mt-1 text-2xl font-semibold text-white">Wishlist</h1>
+          <p className="mt-1 text-sm text-white/52">Save pieces before they become impulse buys.</p>
         </div>
         <Button onClick={() => setOpen(true)} size="sm" className="gap-1.5">
           <Plus className="h-4 w-4" />
           Add wish
         </Button>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        <Stat label="Saved" value={active.length} />
+        <Stat label="High" value={highPriority} />
+        <Stat label="Bought" value={purchased.length} />
       </div>
 
       {/* Active wishlist grid */}
@@ -49,19 +57,19 @@ export default function WishlistPage() {
                   </div>
                 )}
                 {/* Priority badge */}
-                <span className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-medium text-[#111111] capitalize shadow-sm">
+                <span className="absolute right-2 top-2 rounded-full border border-white/10 bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white capitalize backdrop-blur-md">
                   {item.priority}
                 </span>
               </div>
 
               <div className="mt-2 px-0.5">
-                <p className="truncate text-sm font-medium text-[#111111]">{item.name}</p>
-                <p className="text-xs text-[#888888]">{item.category}</p>
+                <p className="truncate text-sm font-medium text-white">{item.name}</p>
+                <p className="text-xs text-white/45">{item.category}</p>
                 {item.price && (
-                  <p className="mt-0.5 text-sm font-semibold text-[#111111]">{formatCurrency(item.price)}</p>
+                  <p className="mt-0.5 text-sm font-semibold text-white">{formatCurrency(item.price)}</p>
                 )}
                 {item.notes && (
-                  <p className="mt-1 text-xs text-[#888888] line-clamp-2">{item.notes}</p>
+                  <p className="mt-1 line-clamp-2 text-xs text-white/45">{item.notes}</p>
                 )}
                 <div className="mt-2 flex gap-1.5">
                   {item.url && (
@@ -87,10 +95,10 @@ export default function WishlistPage() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-[#E8E8E8] bg-white py-20 text-center">
-          <Heart className="h-10 w-10 text-[#E0E0E0]" />
-          <p className="mt-4 font-semibold text-[#111111]">Nothing saved yet</p>
-          <p className="mt-1 text-sm text-[#888888]">Save pieces before buying so shopping stays intentional</p>
+        <div className="mastical-glass flex flex-col items-center justify-center rounded-lg py-16 text-center">
+          <Heart className="h-10 w-10 text-cyan-100/70" />
+          <p className="mt-4 font-semibold text-white">Nothing saved yet</p>
+          <p className="mt-1 max-w-xs text-sm text-white/52">Build a shortlist of pieces worth considering.</p>
           <Button className="mt-6" onClick={() => setOpen(true)}>Add first wish</Button>
         </div>
       )}
@@ -98,14 +106,14 @@ export default function WishlistPage() {
       {/* Purchased */}
       {purchased.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-[#888888] uppercase tracking-wider">Purchased</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-white/52">Purchased</h2>
           <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
             {purchased.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 rounded-xl border border-[#E8E8E8] bg-white px-4 py-3">
-                <Check className="h-4 w-4 shrink-0 text-[#888888]" />
+              <div key={item.id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.045] px-4 py-3">
+                <Check className="h-4 w-4 shrink-0 text-cyan-100/70" />
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-[#888888] line-through">{item.name}</p>
-                  <p className="text-xs text-[#AAAAAA]">{item.category}</p>
+                  <p className="truncate text-sm font-medium text-white/52 line-through">{item.name}</p>
+                  <p className="text-xs text-white/35">{item.category}</p>
                 </div>
               </div>
             ))}
@@ -114,6 +122,15 @@ export default function WishlistPage() {
       )}
 
       <AddWishlistModal open={open} onClose={() => setOpen(false)} />
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/[0.045] px-3 py-3">
+      <p className="text-lg font-semibold leading-none text-white">{value}</p>
+      <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-white/38">{label}</p>
     </div>
   );
 }

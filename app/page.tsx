@@ -11,7 +11,6 @@ const features = [
 export default function LandingPage() {
   return (
     <div className="relative min-h-screen overflow-hidden text-white">
-      <div className="grid-mask pointer-events-none absolute inset-0 opacity-40" />
       {/* Header */}
       <header className="relative z-10 border-b border-white/[0.08] bg-black/45 backdrop-blur-2xl">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
@@ -33,11 +32,11 @@ export default function LandingPage() {
 
       {/* Hero */}
       <main className="relative z-10 mx-auto max-w-5xl px-4">
-        <section className="flex flex-col items-center py-24 text-center">
-          <p className="rounded-full border border-white/10 bg-white/[0.06] px-4 py-1.5 text-xs uppercase tracking-[0.22em] text-white/68">
+        <section className="flex flex-col items-center py-20 text-center sm:py-24">
+          <p className="rounded-full border border-white/10 bg-white/[0.045] px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-white/62">
             Mastical AI Closet
           </p>
-          <h1 className="mt-7 max-w-3xl text-5xl font-semibold leading-[0.95] tracking-tight text-white sm:text-7xl">
+          <h1 className="mt-7 max-w-3xl text-5xl font-semibold leading-[0.95] tracking-tight text-white sm:text-6xl">
             Fashion <span className="text-gradient">Intelligence</span><br />for your closet.
           </h1>
           <p className="mt-7 max-w-2xl text-lg leading-8 text-white/66">

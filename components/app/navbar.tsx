@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAddModal } from "@/lib/add-modal-context";
 import { AddWishlistModal } from "@/components/wardrobe/add-wishlist-modal";
-import { Home, Plus, Search, Shirt, User } from "lucide-react";
+import { Heart, Home, Plus, Shirt, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Navbar() {
@@ -25,7 +25,7 @@ export function Navbar() {
 
   return (
     <>
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/[0.08] bg-black/55 backdrop-blur-2xl">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/[0.08] bg-[#070707]/90 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-around px-2">
         {/* Home */}
         <BottomNavItem href="/today" label="Home" pathname={pathname}>
@@ -41,15 +41,15 @@ export function Navbar() {
         <div className="flex flex-col items-center -mt-5">
           <button
             onClick={handleAdd}
-            className="flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-[#F7FBFF] text-[#030306] shadow-[0_0_34px_rgba(255,255,255,0.22)] transition-transform active:scale-95"
+            className="flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-[#F7FBFF] text-[#070707] shadow-[0_12px_28px_rgba(0,0,0,0.35)] transition-transform active:scale-95"
           >
             <Plus className="h-6 w-6" strokeWidth={2.5} />
           </button>
         </div>
 
-        {/* Search */}
-        <BottomNavItem href="/wardrobe" label="Search" pathname={pathname}>
-          <Search className="h-5 w-5" />
+        {/* Wishlist */}
+        <BottomNavItem href="/wishlist" label="Wishlist" pathname={pathname}>
+          <Heart className="h-5 w-5" />
         </BottomNavItem>
 
         {/* Profile */}
