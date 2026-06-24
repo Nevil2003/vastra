@@ -272,13 +272,13 @@ export default function TodayPage() {
           <div className="flex items-start justify-between px-5 pb-3 pt-5">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-widest text-white/42">
-                Today's Suggestions
+                Today&apos;s Suggestions
               </p>
               <h3 className="mt-1 text-xl font-semibold text-white">
                 {activeSuggestion?.title ?? (suggestionsLoading ? "Reading your closet" : "No suggestion yet")}
               </h3>
               <p className="mt-0.5 text-sm text-white/52">
-                {activeSuggestion?.subtitle ?? (suggestionsLoading ? "Building today’s match" : "Add at least two closet pieces")}
+                {activeSuggestion?.subtitle ?? (suggestionsLoading ? "Building today&apos;s match" : "Add at least two closet pieces")}
               </p>
             </div>
             <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-medium tabular-nums text-white/52">

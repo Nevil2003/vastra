@@ -2,7 +2,6 @@
 
 import { Heart, Shirt } from "lucide-react";
 import { Garment, Outfit } from "@/types";
-import { cn } from "@/lib/utils";
 
 interface Props {
   outfit: Outfit;

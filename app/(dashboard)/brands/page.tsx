@@ -166,7 +166,7 @@ export default function BrandsPage() {
             className="flex w-full items-center justify-between gap-4 rounded-lg border border-dashed border-cyan-100/30 bg-cyan-100/[0.06] px-4 py-3 text-left transition hover:bg-cyan-100/[0.1]"
           >
             <div>
-              <p className="text-sm font-semibold text-white">Add "{query.trim()}" to your watchlist</p>
+              <p className="text-sm font-semibold text-white">Add &quot;{query.trim()}&quot; to your watchlist</p>
               <p className="mt-1 text-xs text-white/42">
                 We will save it as a custom brand and use a search link for sales and collections.
               </p>
