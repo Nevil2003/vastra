@@ -3,15 +3,25 @@
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
+  Bell,
   CloudSun,
   Download,
+  ExternalLink,
   ImageUp,
   Send,
   Shirt,
   SlidersHorizontal,
+  Store,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import {
+  customBrandsStorageKey,
+  followedBrandsStorageKey,
+  getBrandById,
+  getDefaultFollowedBrandIds,
+  IndianBrand,
+} from "@/lib/brand-data";
 
 type Weather = {
   high: number;
@@ -96,6 +106,8 @@ export default function RecommendedPage() {
   const [savedLooks, setSavedLooks] = useState<SavedLook[]>([]);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState("");
+  const [followedBrandIds, setFollowedBrandIds] = useState<string[]>([]);
+  const [customBrands, setCustomBrands] = useState<IndianBrand[]>([]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setIsLoading(false), 900);
@@ -104,6 +116,11 @@ export default function RecommendedPage() {
 
     if (storedAvatar) setAvatarPreview(storedAvatar);
     if (storedLooks) setSavedLooks(JSON.parse(storedLooks) as SavedLook[]);
+    setFollowedBrandIds(
+      JSON.parse(window.localStorage.getItem(followedBrandsStorageKey) || "null") ||
+        getDefaultFollowedBrandIds()
+    );
+    setCustomBrands(JSON.parse(window.localStorage.getItem(customBrandsStorageKey) || "[]"));
 
     return () => window.clearTimeout(timer);
   }, []);
@@ -118,6 +135,10 @@ export default function RecommendedPage() {
   );
 
   const limitReached = savedLooks.length >= 3;
+  const followedBrandAlerts = followedBrandIds
+    .map((brandId) => customBrands.find((brand) => brand.id === brandId) || getBrandById(brandId))
+    .filter((brand): brand is IndianBrand => Boolean(brand))
+    .slice(0, 3);
 
   function saveLook(occasion: string, recommendation: string) {
     if (limitReached) return;
@@ -196,6 +217,48 @@ export default function RecommendedPage() {
             </div>
             <p className="text-sm font-medium text-[#888888]">{savedLooks.length}/3 looks saved</p>
           </div>
+
+          {followedBrandAlerts.length > 0 && (
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-white/60">
+                    Brand radar
+                  </h2>
+                  <p className="mt-1 text-sm text-white/42">
+                    Sale and collection signals from brands you follow.
+                  </p>
+                </div>
+                <Bell className="h-5 w-5 text-cyan-100/70" />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {followedBrandAlerts.map((brand) => (
+                  <article
+                    key={brand.id}
+                    className="rounded-lg border border-white/10 bg-white/[0.045] p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-white">{brand.name}</p>
+                        <p className="mt-1 text-xs text-cyan-100/70">{brand.signal}</p>
+                      </div>
+                      <Store className="h-4 w-4 text-white/40" />
+                    </div>
+                    <p className="mt-3 text-sm font-medium text-white/82">{brand.signalText}</p>
+                    <p className="mt-1 line-clamp-2 text-xs leading-5 text-white/45">
+                      {brand.matchReason}
+                    </p>
+                    <a href={brand.url} target="_blank" rel="noreferrer" className="mt-3 inline-flex">
+                      <Button size="sm" variant="secondary" className="gap-1.5 px-3 py-1 text-xs">
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        Check drop
+                      </Button>
+                    </a>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {recommendedOutfits.map((outfit) => {

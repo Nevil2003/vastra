@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { ImageSelection, SearchOverlay } from "@/components/wardrobe/search-overlay";
+import { indianBrands } from "@/lib/brand-data";
 import { createItem } from "@/lib/firestore";
 import { uploadUserImage } from "@/lib/storage";
 import { cn } from "@/lib/utils";
@@ -54,7 +55,9 @@ export function AddWishlistModal({ open, onClose }: { open: boolean; onClose: ()
     name: "",
     category: "Top" as GarmentCategory,
     priority: "medium" as WishlistItem["priority"],
+    brand: "",
     price: "",
+    originalPrice: "",
     url: "",
     notes: "",
   });
@@ -97,7 +100,16 @@ export function AddWishlistModal({ open, onClose }: { open: boolean; onClose: ()
     setImageMode("photo");
     setOverlayOpen(false);
     setError("");
-    setForm({ name: "", category: "Top", priority: "medium", price: "", url: "", notes: "" });
+    setForm({
+      name: "",
+      category: "Top",
+      priority: "medium",
+      brand: "",
+      price: "",
+      originalPrice: "",
+      url: "",
+      notes: "",
+    });
   }
 
   async function submit(e: FormEvent) {
@@ -118,9 +130,13 @@ export function AddWishlistModal({ open, onClose }: { open: boolean; onClose: ()
         userId: user.uid,
         name: form.name.trim(),
         category: form.category,
+        brand: form.brand || undefined,
         imageUrl,
         url: form.url || undefined,
         price: form.price ? Number(form.price) : undefined,
+        originalPrice: form.originalPrice ? Number(form.originalPrice) : undefined,
+        saleStatus: form.brand ? "watching" : undefined,
+        lastCheckedAt: form.brand ? new Date().toISOString() : undefined,
         priority: form.priority,
         notes: form.notes || undefined,
         purchased: false,
@@ -292,7 +308,20 @@ export function AddWishlistModal({ open, onClose }: { open: boolean; onClose: ()
 
           {/* Details */}
           <div className="grid gap-3 sm:grid-cols-2">
+            <select
+              value={form.brand}
+              onChange={(e) => setField("brand", e.target.value)}
+              className="h-11 rounded-xl border border-[#E8E8E8] bg-white px-3 text-sm text-[#111111] outline-none transition focus:border-[#111111] focus:ring-4 focus:ring-[#111111]/10"
+            >
+              <option value="">Brand to track</option>
+              {indianBrands.map((brand) => (
+                <option key={brand.id} value={brand.name}>
+                  {brand.name}
+                </option>
+              ))}
+            </select>
             <Input type="number" min="0" placeholder="Price" value={form.price} onChange={(e) => setField("price", e.target.value)} />
+            <Input type="number" min="0" placeholder="Original price" value={form.originalPrice} onChange={(e) => setField("originalPrice", e.target.value)} />
             <Input placeholder="Product URL (shop link)" value={form.url} onChange={(e) => setField("url", e.target.value)} />
           </div>
           <Input placeholder="Notes" value={form.notes} onChange={(e) => setField("notes", e.target.value)} />

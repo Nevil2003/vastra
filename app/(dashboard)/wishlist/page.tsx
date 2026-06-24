@@ -60,13 +60,30 @@ export default function WishlistPage() {
                 <span className="absolute right-2 top-2 rounded-full border border-white/10 bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white capitalize backdrop-blur-md">
                   {item.priority}
                 </span>
+                {item.saleStatus && (
+                  <span className="absolute left-2 top-2 rounded-full border border-cyan-100/20 bg-cyan-100 px-2 py-0.5 text-[10px] font-bold text-[#030306] capitalize">
+                    {item.saleStatus.replace("-", " ")}
+                  </span>
+                )}
               </div>
 
               <div className="mt-2 px-0.5">
                 <p className="truncate text-sm font-medium text-white">{item.name}</p>
-                <p className="text-xs text-white/45">{item.category}</p>
+                <p className="text-xs text-white/45">
+                  {[item.brand, item.category].filter(Boolean).join(" / ")}
+                </p>
                 {item.price && (
-                  <p className="mt-0.5 text-sm font-semibold text-white">{formatCurrency(item.price)}</p>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                    <p className="text-sm font-semibold text-white">{formatCurrency(item.price)}</p>
+                    {item.originalPrice && item.originalPrice > item.price && (
+                      <>
+                        <p className="text-xs text-white/35 line-through">{formatCurrency(item.originalPrice)}</p>
+                        <p className="rounded-full bg-cyan-100/15 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-100">
+                          {Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}% off
+                        </p>
+                      </>
+                    )}
+                  </div>
                 )}
                 {item.notes && (
                   <p className="mt-1 line-clamp-2 text-xs text-white/45">{item.notes}</p>

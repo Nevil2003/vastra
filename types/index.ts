@@ -123,9 +123,13 @@ export type WishlistItem = {
   userId: string;
   name: string;
   category: GarmentCategory;
+  brand?: string;
   imageUrl?: string;
   url?: string;
   price?: number;
+  originalPrice?: number;
+  saleStatus?: "watching" | "sale" | "price-drop" | "restocked";
+  lastCheckedAt?: string;
   priority: "low" | "medium" | "high";
   notes?: string;
   purchased: boolean;
